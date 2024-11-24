@@ -33,24 +33,15 @@ service:
   headlessServiceSuffix: internal
   type: ClusterIP
   port: 27017
-  ## The node port (only relevant for type LoadBalancer or NodePort)
-  nodePort:
-  ## The cluster ip address (only relevant for type LoadBalancer or NodePort)
-  clusterIP:
-  ## The loadbalancer ip address (only relevant for type LoadBalancer)
-  loadBalancerIP:
-  ## Annotations to add to the service
-  annotations: {}
-  ## Labels to add to the service
   labels: {}
 
 ## Resource limits and requests
 resources:
   limits:
-    memory: 256Mi
+    memory: 1Gi
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 512Mi
 
 ## startup check
 startupProbe:
@@ -88,9 +79,10 @@ settings:
 
 ## Optional user database which is created during first startup with user and password
 ## Use external secret for production
+## Database name should be "guestbook" due to the limitation from src/backend/back.py line 11
 userDatabase:
   ## Name of the user database
-  name: guestbookdatabase
+  name: guestbook
   ## Database user with full access rights
   user: guestbook-user
   ## Password of the database user
