@@ -6,16 +6,26 @@ Detailed info: https://github.com/groundhog2k/helm-charts/tree/master/charts/mon
 
 ## Usage
 
-1. Add the groundhog2k.github.io Helm repository:
+1. Add the required Helm repositories:
 
 ```bash
+# Add MongoDB repository
 helm repo add groundhog2k https://groundhog2k.github.io/helm-charts/
+
+# Add Prometheus Community repository for MongoDB Exporter
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
 helm repo update
 ```
 
-2. Install the MongoDB chart using the custom values:
+2. Install the MongoDB chart and MongoDB Exporter using the custom values:
 ```bash
-	helm upgrade --install guestbook-mongodb groundhog2k/mongodb -f ./values.yaml -n mongodb --create-namespace
+
+# Install MongoDB
+helm upgrade --install guestbook-mongodb groundhog2k/mongodb -f ./values.yaml -n mongodb --create-namespace
+
+# Install MongoDB Exporter
+helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter -f ./mongodb-exporter.yaml -n mongodb
 ```
 
 ## Introduction
@@ -23,6 +33,8 @@ helm repo update
 This chart uses the original [MongoDB image from Docker Hub](https://hub.docker.com/_/mongo/) to deploy a stateful MongoDB instance in a Kubernetes cluster.
 
 It fully supports deployment of the multi-architecture docker image.
+
+Additionally, this setup includes the [MongoDB Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-mongodb-exporter) for Prometheus monitoring, which collects and exports various MongoDB metrics.
 
 ## Prerequisites
 
@@ -32,4 +44,6 @@ It fully supports deployment of the multi-architecture docker image.
 
 ## Configuration
 
-Configuration adjustments applied via [values.yaml](./values.yaml)
+Configuration adjustments applied via:
+- MongoDB: [values.yaml](./values.yaml)
+- MongoDB Exporter: [mongodb-exporter.yaml](./mongodb-exporter.yaml)

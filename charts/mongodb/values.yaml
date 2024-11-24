@@ -34,6 +34,17 @@ service:
   type: ClusterIP
   port: 27017
   labels: {}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9216"
+    prometheus.io/path: "/metrics"
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+    - name: metrics
+      port: 9216
+      targetPort: 9216
 
 ## Resource limits and requests
 resources:

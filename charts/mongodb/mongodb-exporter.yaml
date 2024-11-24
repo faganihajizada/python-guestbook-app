@@ -1,0 +1,30 @@
+# values.yaml
+mongodb:
+  # Adjust this to your MongoDB connection string
+  uri: "mongodb://{{ .Values.settings.rootUsername }}:{{ .Values.settings.rootPassword }}@guestbook-mongodb.mongodb:27017"
+
+service:
+  port: 9216
+  type: ClusterIP
+
+serviceMonitor:
+  enabled: true
+  namespace: mongodb
+  interval: 30s
+  additionalLabels:
+    release: kube-prom-stack
+  labels:
+    release: kube-prom-stack
+    app.kubernetes.io/name: prometheus-mongodb-exporter
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+serviceMonitorSelector:
+  matchLabels:
+    release: kube-prom-stack
