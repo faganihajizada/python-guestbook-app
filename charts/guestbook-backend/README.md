@@ -4,6 +4,16 @@
 
 A Helm chart for Guestbook Backend Service
 
+## Introduction
+
+This chart bootstraps `guestbook-backend` deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+
+## Deploy
+
+```console
+helm install guestbook-backend /charts/guestbook-backend -f /charts/guestbook-backend/values.yaml -n [NAMESPACE]
+```
+
 ## Values
 
 | Key | Type | Default | Description |
