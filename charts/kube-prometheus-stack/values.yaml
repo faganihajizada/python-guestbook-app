@@ -1,0 +1,11 @@
+grafana:
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    # Set the host to the domain name of the Grafana instance based on ingress controller in local kind cluster
+    hosts: 
+      - "grafana.localhost"
+    paths: ["/"]
+    pathType: Prefix
