@@ -57,7 +57,7 @@ spec:
             # Under normal circumstances, this should be managed by the secret
             # check /src/backend/back.py for the format
             - name: GUESTBOOK_DB_ADDR
-              value: {{ printf "%s:$(MONGODB_PASSWORD)@%s:%d/%s" .Values.mongodb.auth.username .Values.mongodb.host (int .Values.mongodb.port) .Values.mongodb.database | quote }}
+              value: {{ printf "%s:$(MONGODB_PASSWORD)@%s:%d" .Values.mongodb.auth.username .Values.mongodb.host (int .Values.mongodb.port) | quote }}
           envFrom:
             - configMapRef:
                 name: {{ include "guestbook-backend.fullname" . }}-config
