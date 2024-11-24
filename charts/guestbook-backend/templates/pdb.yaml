@@ -1,0 +1,13 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "guestbook-backend.fullname" . }}
+  labels:
+    {{- include "guestbook-backend.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "guestbook-backend.selectorLabels" . | nindent 6 }}
+{{- end }}

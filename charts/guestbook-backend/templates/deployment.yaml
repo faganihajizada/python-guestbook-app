@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "guestbook-backend.fullname" . }}
+  labels:
+    {{- include "guestbook-backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.deployment.replicas }}
+  {{- end }}
+  strategy:
+    {{- toYaml .Values.deployment.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "guestbook-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "guestbook-backend.selectorLabels" . | nindent 8 }}
+        {{- with .Values.deployment.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.deployment.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "guestbook-backend.serviceAccountName" . }}
+      initContainers:
+      - name: init-db-ready
+        image: {{ .Values.mongodb.initContainer.image }}:{{ .Values.mongodb.initContainer.tag }}
+        command: ['/bin/sh', '-c']
+        args:
+          - |
+            echo "Waiting for mongodb at {{ .Values.mongodb.host }}:{{ .Values.mongodb.port }} to go live..."
+            until (mongosh --host {{ .Values.mongodb.host }}:{{ .Values.mongodb.port }} >/dev/null) do echo "Waiting for connection for 2 sec."; sleep 2; done
+      containers:
+        - name: {{ .Values.deployment.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http-server
+              containerPort: {{ .Values.deployment.containerPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.deployment.containerPort | quote }}
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mongodb.auth.secretKeys.secretName }}
+                  key: {{ .Values.mongodb.auth.secretKeys.userPasswordKey }}
+            # Under normal circumstances, this should be managed by the secret
+            # check /src/backend/back.py for the format
+            - name: GUESTBOOK_DB_ADDR
+              value: {{ printf "%s:$(MONGODB_PASSWORD)@%s:%d/%s" .Values.mongodb.auth.username .Values.mongodb.host (int .Values.mongodb.port) .Values.mongodb.database | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "guestbook-backend.fullname" . }}-config
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http-server
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+            successThreshold: {{ .Values.probes.liveness.successThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http-server
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
