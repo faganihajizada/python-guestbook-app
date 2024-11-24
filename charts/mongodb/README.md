@@ -6,9 +6,16 @@ Detailed info: https://github.com/groundhog2k/helm-charts/tree/master/charts/mon
 
 ## Usage
 
+1. Add the groundhog2k.github.io Helm repository:
+
+```bash
+helm repo add groundhog2k https://groundhog2k.github.io/helm-charts/
+helm repo update
 ```
-	helm upgrade --install guestbook-mongodb groundhog2k/mongodb \
-	-f ./values.yaml -n mongodb --create-namespace
+
+2. Install the MongoDB chart using the custom values:
+```bash
+	helm upgrade --install guestbook-mongodb groundhog2k/mongodb -f ./values.yaml -n mongodb --create-namespace
 ```
 
 ## Introduction
@@ -22,3 +29,7 @@ It fully supports deployment of the multi-architecture docker image.
 - Kubernetes 1.12+
 - Helm 3.x
 - PV provisioner support in the underlying infrastructure
+
+## Configuration
+
+Configuration adjustments applied via [values.yaml](./values.yaml)
