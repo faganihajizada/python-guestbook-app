@@ -33,26 +33,25 @@ HELM_TIMEOUT := 5m
 
 .PHONY: all build push deploy delete create-secrets delete-secrets help
 
-all: verify-variables build push deploy
+all: verify-variables build push deploy  ## Build, push and deploy the complete application
 
-build: build-frontend build-backend
+build: build-frontend build-backend  ## Build all Docker images
 
-build-frontend:
+build-frontend:  ## Build the frontend Docker image
 	docker build -t $(FRONTEND_IMAGE) ./$(FRONTEND_DIR)
 
-build-backend:
+build-backend: ## Build the backend Docker image
 	docker build -t $(BACKEND_IMAGE) ./$(BACKEND_DIR)
 
-push: push-frontend push-backend
+push: push-frontend push-backend  ## Push all Docker images
 
-push-frontend:
+push-frontend: ## Push the frontend Docker image
 	docker push $(FRONTEND_IMAGE)
 
-push-backend:
+push-backend: ## Push the backend Docker image
 	docker push $(BACKEND_IMAGE)
 
-# deploy: Deploys the complete application stack including MongoDB, backend, frontend, and monitoring
-deploy: check-prerequisites create-namespaces deploy-monitoring-stack deploy-frontend
+deploy: check-prerequisites create-namespaces deploy-monitoring-stack deploy-frontend  ## Deploy the complete application stack
 
 # Checking for required tools
 check-prerequisites:
@@ -116,7 +115,7 @@ deploy-monitoring-stack: create-namespaces
 	-f $(MONITORING_CHART)/values.yaml -n $(MONITORING_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
 
-delete: delete-monitoring delete-apps delete-secrets delete-namespaces
+delete: delete-monitoring delete-apps delete-secrets delete-namespaces  ## Remove all application resources
 
 delete-monitoring:
 	helm uninstall mongodb-exporter -n $(MONGO_NAMESPACE) --wait || true
@@ -135,12 +134,23 @@ delete-namespaces:
 		kubectl delete namespace $$ns --wait=true --timeout=$(HELM_TIMEOUT) --ignore-not-found; \
 	done
 
-help: ## Display this help message
-	@echo "Usage: make [target]"
+help:  ## Display available commands with descriptions
+	@echo "Python Guestbook Application Management"
+	@echo "======================================"
 	@echo ""
-	@echo "Targets:"
-	@awk -F ':|##' '/^[^\t].+?:.*?##/ { printf "  %-20s %s\n", $$1, $$NF }' $(MAKEFILE_LIST)
+	@echo "Available commands:"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*##"; printf "  \033[36m%-20s\033[0m %s\n", "Command", "Description"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "Examples:"
+	@echo "  make all                     # Build, push and deploy everything"
+	@echo "  make deploy                  # Deploy the complete stack"
+	@echo "  make delete                  # Clean up all resources"
+	@echo ""
+	@echo "Configuration:"
+	@echo "  REGISTRY = $(REGISTRY)"
+	@echo "  VERSION = $(VERSION)"
 
-verify-variables:
+verify-variables:  ## Verify required variables are set
 	@test -n "$(REGISTRY)" || (echo "REGISTRY is not set" && exit 1)
 	@test -n "$(VERSION)" || (echo "VERSION is not set" && exit 1)
