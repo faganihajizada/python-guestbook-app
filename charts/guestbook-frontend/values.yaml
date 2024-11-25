@@ -127,3 +127,11 @@ affinity: {}
 # Tolerations
 # Can be used to tolerate the taints on the nodes on which the guestbook-backend pod will be scheduled
 tolerations: {}
+
+# The namespace which kube-prometheus-stack is monitoring for resources like Prometheus, Grafana, etc.
+monitoring:
+  namespace: monitoring
+  prometheusOperator:
+    instance: kube-prom-stack
+    name: kube-prometheus-stack
+    release: kube-prom-stack

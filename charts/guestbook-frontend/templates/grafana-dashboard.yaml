@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guestbook-frontend-dashboard
+  namespace: {{ .Values.monitoring.namespace }}
+  # labels for Grafana to find the dashboard
+  labels:
+    grafana_dashboard: "true"
+data:
+  frontend-metrics.json: {{ .Files.Get "dashboards/guestbook-frontend.json" | quote }}

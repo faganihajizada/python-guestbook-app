@@ -1,0 +1,73 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "guestbook-frontend.fullname" . }}-rules
+  labels:
+    {{- include "guestbook-frontend.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .Values.monitoring.prometheusOperator.instance | default "kube-prom-stack" }}
+    app.kubernetes.io/part-of: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
+    app: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
+    release: {{ .Values.monitoring.prometheusOperator.release | default "kube-prom-stack" }}
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  groups:
+  - name: guestbook-frontend.rules
+    rules:
+    # Pod Health
+    - alert: GuestbookFrontendPodsNotReady
+      expr: sum(kube_pod_status_ready{condition="true", namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}) < {{ .Values.deployment.replicas | default 1 }}
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Not all frontend pods are ready"
+        description: "Some frontend pods have been in non-ready state for more than 5 minutes"
+
+    # Pod Restarts
+    - alert: GuestbookFrontendFrequentRestarts
+      expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[1h]) > 2
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Frequent frontend pod restarts detected"
+        description: "Frontend pod has restarted more than 2 times in the last hour"
+
+    # CPU Usage
+    - alert: GuestbookFrontendHighCPUUsage
+      expr: |
+        sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""}[5m]))
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="cpu"}) > 0.85
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High frontend CPU usage"
+        description: "Frontend CPU usage is above 85% of the limit for 15 minutes"
+
+    # Memory Usage
+    - alert: GuestbookFrontendHighMemoryUsage
+      expr: |
+        sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""})
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"}) > 0.85
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High frontend memory usage"
+        description: "Frontend memory usage is above 85% of the limit for 15 minutes"
+
+    # Recording Rules for dashboard
+    - record: guestbook_frontend:cpu_usage_percentage
+      expr: |
+        100 * sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""}[5m]))
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="cpu"})
+
+    - record: guestbook_frontend:memory_usage_percentage
+      expr: |
+        100 * sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""})
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"}) 
