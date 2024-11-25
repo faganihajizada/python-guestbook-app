@@ -58,7 +58,7 @@ resources:
 # A a secret should be present in cluster with the name specified in "secretName" with the following keys:
 ## - USERDB_PASSWORD: the password for the guestbook-user for MongoDB
 mongodb:
-  host: guestbook-mongodb.mongodb
+  host: guestbook-mongodb.mongodb.svc.cluster.local
   port: 27017
   # Database name should be "guestbook" due to the limitation from src/backend/back.py line 11
   # It is configurable for the helm chart in case the application requires a different database name
