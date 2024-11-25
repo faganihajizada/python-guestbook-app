@@ -1,0 +1,103 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "guestbook-backend.fullname" . }}-rules
+  labels:
+    {{- include "guestbook-backend.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .Values.monitoring.prometheusOperator.instance | default "kube-prom-stack" }}
+    app.kubernetes.io/part-of: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
+    app: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
+    release: {{ .Values.monitoring.prometheusOperator.release | default "kube-prom-stack" }}
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  groups:
+  - name: guestbook-backend.rules
+    rules:
+    # Pod Health
+    - alert: GuestbookBackendPodsNotReady
+      expr: sum(kube_pod_status_ready{condition="true", namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*"}) < {{ .Values.replicaCount | default 1 }}
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Not all pods are ready"
+        description: "Some pods have been in non-ready state for more than 5 minutes"
+
+    # Pod Restarts
+    - alert: GuestbookBackendFrequentRestarts
+      expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*"}[1h]) > 2
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Frequent pod restarts detected"
+        description: "Pod has restarted more than 2 times in the last hour"
+
+    # CPU Usage
+    - alert: GuestbookBackendHighCPUUsage
+      expr: |
+        sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", container!=""}[5m]))
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", resource="cpu"}) > 0.85
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage"
+        description: "CPU usage is above 85% of the limit for 15 minutes"
+
+    # Memory Usage
+    - alert: GuestbookBackendHighMemoryUsage
+      expr: |
+        sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", container!=""})
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", resource="memory"}) > 0.85
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage"
+        description: "Memory usage is above 85% of the limit for 15 minutes"
+
+    # OOM Kills
+    - alert: GuestbookBackendOOMKilled
+      expr: kube_pod_container_status_last_terminated_reason{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", reason="OOMKilled"} == 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Container OOM killed"
+        description: "Container was terminated due to Out Of Memory condition"
+
+    # Pod Pending Status
+    - alert: GuestbookBackendPodsPending
+      expr: kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", phase="Pending"} == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pods in pending state"
+        description: "Some pods are stuck in pending state for more than 5 minutes"
+
+    # Container Status
+    - alert: GuestbookBackendContainerWaiting
+      expr: kube_pod_container_status_waiting{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*"} == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container in waiting state"
+        description: "Container has been in waiting state for more than 5 minutes"
+
+    # Recording Rules for metrics
+    - record: guestbook_backend:cpu_usage_percentage
+      expr: |
+        100 * sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", container!=""}[5m]))
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", resource="cpu"})
+
+    - record: guestbook_backend:memory_usage_percentage
+      expr: |
+        100 * sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", container!=""})
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", resource="memory"})
