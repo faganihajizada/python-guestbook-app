@@ -101,6 +101,16 @@ spec:
         summary: "High network error rate detected"
         description: "Backend is experiencing elevated network errors for 15 minutes"
 
+    # No Pods Running
+    - alert: GuestbookBackendNoPods
+      expr: kube_deployment_status_replicas_available{namespace="{{ .Release.Namespace }}", deployment="guestbook-backend"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "No backend pods are running"
+        description: "There are no available pods running for the backend deployment"
+
     # Recording Rules for metrics
     - record: guestbook_backend:cpu_usage_percentage
       expr: |
