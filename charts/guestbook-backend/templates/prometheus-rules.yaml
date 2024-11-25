@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.prometheusRules.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -20,8 +21,8 @@ spec:
       labels:
         severity: critical
       annotations:
-        summary: "Not all pods are ready"
-        description: "Some pods have been in non-ready state for more than 5 minutes"
+        summary: "Not all backend pods are ready"
+        description: "Some backend pods have been in non-ready state for more than 5 minutes"
 
     # Pod Restarts
     - alert: GuestbookBackendFrequentRestarts
@@ -30,8 +31,8 @@ spec:
       labels:
         severity: warning
       annotations:
-        summary: "Frequent pod restarts detected"
-        description: "Pod has restarted more than 2 times in the last hour"
+        summary: "Frequent backend pod restarts detected"
+        description: "Backend pod has restarted more than 2 times in the last hour"
 
     # CPU Usage
     - alert: GuestbookBackendHighCPUUsage
@@ -43,8 +44,8 @@ spec:
       labels:
         severity: warning
       annotations:
-        summary: "High CPU usage"
-        description: "CPU usage is above 85% of the limit for 15 minutes"
+        summary: "High backend CPU usage"
+        description: "Backend CPU usage is above 85% of the limit for 15 minutes"
 
     # Memory Usage
     - alert: GuestbookBackendHighMemoryUsage
@@ -56,8 +57,8 @@ spec:
       labels:
         severity: warning
       annotations:
-        summary: "High memory usage"
-        description: "Memory usage is above 85% of the limit for 15 minutes"
+        summary: "High backend memory usage"
+        description: "Backend memory usage is above 85% of the limit for 15 minutes"
 
     # OOM Kills
     - alert: GuestbookBackendOOMKilled
@@ -66,8 +67,8 @@ spec:
       labels:
         severity: critical
       annotations:
-        summary: "Container OOM killed"
-        description: "Container was terminated due to Out Of Memory condition"
+        summary: "Backend container OOM killed"
+        description: "Backend container was terminated due to Out Of Memory condition"
 
     # Pod Pending Status
     - alert: GuestbookBackendPodsPending
@@ -76,8 +77,8 @@ spec:
       labels:
         severity: warning
       annotations:
-        summary: "Pods in pending state"
-        description: "Some pods are stuck in pending state for more than 5 minutes"
+        summary: "Backend pods in pending state"
+        description: "Some backend pods are stuck in pending state for more than 5 minutes"
 
     # Container Status
     - alert: GuestbookBackendContainerWaiting
@@ -86,8 +87,19 @@ spec:
       labels:
         severity: warning
       annotations:
-        summary: "Container in waiting state"
-        description: "Container has been in waiting state for more than 5 minutes"
+        summary: "Backend container in waiting state"
+        description: "Backend container has been in waiting state for more than 5 minutes"
+
+    # Network Errors (new)
+    - alert: GuestbookBackendHighNetworkErrors
+      expr: |
+        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*"}[5m])) > 0.1
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High network error rate detected"
+        description: "Backend is experiencing elevated network errors for 15 minutes"
 
     # Recording Rules for metrics
     - record: guestbook_backend:cpu_usage_percentage
@@ -101,3 +113,8 @@ spec:
         100 * sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", container!=""})
         /
         sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*", resource="memory"})
+
+    - record: guestbook_backend:network_error_rate
+      expr: |
+        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-backend.*"}[5m]))
+{{- end }}

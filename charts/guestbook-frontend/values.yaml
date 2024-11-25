@@ -136,3 +136,7 @@ monitoring:
     instance: kube-prom-stack
     name: kube-prometheus-stack
     release: kube-prom-stack
+  prometheusRules:
+    enabled: true
+  grafanaDashboards:
+    enabled: true

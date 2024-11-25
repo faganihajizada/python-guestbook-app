@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.prometheusRules.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -15,7 +16,7 @@ spec:
     rules:
     # Pod Health
     - alert: GuestbookFrontendPodsNotReady
-      expr: sum(kube_pod_status_ready{condition="true", namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}) < {{ .Values.deployment.replicas | default 1 }}
+      expr: sum(kube_pod_status_ready{condition="true", namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}) < {{ .Values.replicaCount | default 1 }}
       for: 5m
       labels:
         severity: critical
@@ -59,7 +60,48 @@ spec:
         summary: "High frontend memory usage"
         description: "Frontend memory usage is above 85% of the limit for 15 minutes"
 
-    # Recording Rules for dashboard
+    # OOM Kills (added)
+    - alert: GuestbookFrontendOOMKilled
+      expr: kube_pod_container_status_last_terminated_reason{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", reason="OOMKilled"} == 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Frontend container OOM killed"
+        description: "Frontend container was terminated due to Out Of Memory condition"
+
+    # Pod Pending Status (added)
+    - alert: GuestbookFrontendPodsPending
+      expr: kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", phase="Pending"} == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Frontend pods in pending state"
+        description: "Some frontend pods are stuck in pending state for more than 5 minutes"
+
+    # Container Status (added)
+    - alert: GuestbookFrontendContainerWaiting
+      expr: kube_pod_container_status_waiting{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"} == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Frontend container in waiting state"
+        description: "Frontend container has been in waiting state for more than 5 minutes"
+
+    # Network Errors (added)
+    - alert: GuestbookFrontendHighNetworkErrors
+      expr: |
+        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[5m])) > 0.1
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High network error rate detected"
+        description: "Frontend is experiencing elevated network errors for 15 minutes"
+
+    # Recording Rules for metrics
     - record: guestbook_frontend:cpu_usage_percentage
       expr: |
         100 * sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""}[5m]))
@@ -70,4 +112,9 @@ spec:
       expr: |
         100 * sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""})
         /
-        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"}) 
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"})
+
+    - record: guestbook_frontend:network_error_rate
+      expr: |
+        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[5m]))
+{{- end }}
