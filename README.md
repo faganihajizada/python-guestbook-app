@@ -11,35 +11,46 @@ Details of the challenge: [instructions.md](instructions.md)
 ## Helm Chart Structure
 
 ```
-── charts
-│   ├── backend
+├── charts
+│   ├── guestbook-backend
 │   │   ├── Chart.yaml
 │   │   ├── README.md
+│   │   ├── dashboards
+│   │   │   └── guestbook-backend.json
 │   │   ├── templates
 │   │   │   ├── NOTES.txt
 │   │   │   ├── _helpers.tpl
 │   │   │   ├── configmap.yaml
 │   │   │   ├── deployment.yaml
+│   │   │   ├── grafana-dashboards.yaml
 │   │   │   ├── hpa.yaml
 │   │   │   ├── pdb.yaml
+│   │   │   ├── prometheus-rules.yaml
+│   │   │   ├── secret.yaml
 │   │   │   ├── service.yaml
 │   │   │   └── serviceaccount.yaml
 │   │   └── values.yaml
-│   ├── frontend
+│   ├── guestbook-frontend
 │   │   ├── Chart.yaml
 │   │   ├── README.md
+│   │   ├── dashboards
+│   │   │   └── guestbook-frontend.json
 │   │   ├── templates
-│   │   │   ├── NOTES.txt
 │   │   │   ├── _helpers.tpl
 │   │   │   ├── deployment.yaml
+│   │   │   ├── grafana-dashboard.yaml
 │   │   │   ├── hpa.yaml
 │   │   │   ├── ingress.yaml
 │   │   │   ├── pdb.yaml
+│   │   │   ├── prometheus-rules.yaml
 │   │   │   ├── service.yaml
 │   │   │   └── serviceaccount.yaml
 │   │   └── values.yaml
-│   └── mongodb(groundhog2k/mongodb)
-│       └── values.yaml
-│   └── prometheus-community/kube-prometheus-stack
+│   ├── kube-prometheus-stack
+│   │   ├── README.md
+│   │   └── values.yaml
+│   └── mongodb
+│       ├── README.md
+│       ├── mongodb-exporter.yaml
 │       └── values.yaml
 ```
