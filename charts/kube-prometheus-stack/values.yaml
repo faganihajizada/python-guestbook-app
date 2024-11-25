@@ -1,3 +1,4 @@
+# Config for Grafana
 grafana:
   ingress:
     enabled: true
@@ -9,3 +10,12 @@ grafana:
       - "grafana.localhost"
     paths: ["/"]
     pathType: Prefix
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "true"
+      searchNamespace: "monitoring"
+      folderAnnotation: grafana_folder  # Optional: annotation to specify dashboard folder
+      provider:
+        foldersFromFilesStructure: true
