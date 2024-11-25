@@ -16,9 +16,9 @@ Details of the challenge: [instructions.md](instructions.md)
 
 ## Prerequisites
 
-- Docker
+- [Docker](https://docs.docker.com/)
 - Kubernetes cluster (local using [kind](https://kind.sigs.k8s.io/docs/user/quick-start/)). A [script](./start-local.sh) can be used to start a local kind cluster and image registry
-- Helm 3.x
+- [Helm](https://helm.sh/docs/intro/install/)
 - kubectl
 
 ## Quick Start
@@ -34,6 +34,15 @@ Details of the challenge: [instructions.md](instructions.md)
 ```bash
     make all
 ```
+
+## Access the services
+
+- Frontend: http://frontend.localhost
+- Grafana: http://grafana.localhost
+- Prometheus: http://prometheus.localhost 
+- Alertmanager: http://alertmanager.localhost
+
+Note: The above URLs assume you are using the default ingress configuration with a local kind cluster. Update the `hostnames` in the respective Helm values files if using a different domain.
 
 ## Architecture Diagram
 
