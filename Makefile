@@ -68,6 +68,8 @@ create-namespaces:
 	kubectl create namespace $(MONITORING_NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
 
 deploy-mongo: create-namespaces
+	helm repo add groundhog2k https://groundhog2k.github.io/helm-charts/
+	helm repo update
 	helm upgrade --install $(MONGO_RELEASE) groundhog2k/mongodb \
 	-f $(MONGO_CHART)/values.yaml -n $(MONGO_NAMESPACE) --create-namespace \
 	--wait --timeout $(HELM_TIMEOUT)
@@ -103,6 +105,8 @@ deploy-frontend: create-namespaces deploy-backend deploy-mongodb-exporter
 	--wait --timeout $(HELM_TIMEOUT)
 
 deploy-mongodb-exporter: create-namespaces deploy-mongo
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
 	helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter \
 	-f $(MONGO_CHART)/mongodb-exporter.yaml -n $(MONGO_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
