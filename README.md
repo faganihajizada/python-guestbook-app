@@ -35,6 +35,39 @@ Details of the challenge: [instructions.md](instructions.md)
     make all
 ```
 
+3. View available commands:
+
+```bash
+
+    $ make help
+    Python Guestbook Application Management
+    ======================================
+    
+    Available commands:
+    
+      Command              Description
+      all                   Build, push and deploy the complete application
+      build                 Build all Docker images
+      build-frontend        Build the frontend Docker image
+      build-backend         Build the backend Docker image
+      push                  Push all Docker images
+      push-frontend         Push the frontend Docker image
+      push-backend          Push the backend Docker image
+      deploy                Deploy the complete application stack
+      delete                Remove all application resources
+      help                  Display available commands with descriptions
+      verify-variables      Verify required variables are set
+    
+    Examples:
+      make all                     # Build, push and deploy everything
+      make deploy                  # Deploy the complete stack
+      make delete                  # Clean up all resources
+    
+    Configuration:
+      REGISTRY = localhost:5000
+      VERSION = 006e5fa
+```
+
 ## Access the services
 
 - Frontend: http://frontend.localhost
