@@ -94,3 +94,14 @@ Note: The above URLs assume you are using the default ingress configuration with
 │       ├── mongodb-exporter.yaml
 │       └── values.yaml
 ```
+
+Each Helm Chart folder includes a README.md file that provides detailed information about the chart.
+
+- [guestbook-backend](./charts/guestbook-backend/)
+- [guestbook-frontend](./charts/guestbook-frontend/)
+- [MongoDB](./charts/mongodb/)
+- [Kube-Prometheus-Stack](./charts/kube-prometheus-stack/)
+
+## Configuration
+
+Each component can be configured via their respective `values.yaml` files. See individual chart READMEs for detailed configuration options.
