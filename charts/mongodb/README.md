@@ -4,6 +4,19 @@ This is a configuration values file for the [groundhog2k/mongodb](https://github
 
 Detailed info: https://github.com/groundhog2k/helm-charts/tree/master/charts/mongodb
 
+# Requirements
+
+Before deploying this chart, please ensure:
+
+1. Kubernetes secret exists in the target namespace with:
+   - Name: `your-secret-name` (configurable via `existingSecret.name`)
+   - Required keys:
+     ```yaml
+     mongodb-uri: "<URI-for-mongodb-access>"
+     ```
+
+2. MongoDB is installed and accessible
+
 ## Usage
 
 1. Add the required Helm repositories:

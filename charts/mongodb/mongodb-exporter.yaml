@@ -1,12 +1,20 @@
-# values.yaml
-mongodb:
-  # Adjust this to your MongoDB connection string
-  uri: "mongodb://{{ .Values.settings.rootUsername }}:{{ .Values.settings.rootPassword }}@guestbook-mongodb.mongodb:27017"
+# Configuration for MongoDB Exporter
 
+mongodb:
+  uri: ""
+
+# Existing secret containing the MongoDB URI
+# This secret should be created before deploying the MongoDB Exporter
+existingSecret:
+  name: "guestbook-mongodb-uri"
+  key: "mongodb-uri"
+
+# Service configuration
 service:
   port: 9216
   type: ClusterIP
 
+# ServiceMonitor configuration
 serviceMonitor:
   enabled: true
   namespace: mongodb
@@ -17,6 +25,7 @@ serviceMonitor:
     release: kube-prom-stack
     app.kubernetes.io/name: prometheus-mongodb-exporter
 
+# Resource limits and requests
 resources:
   limits:
     cpu: 100m
@@ -25,6 +34,7 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+# ServiceMonitor selector
 serviceMonitorSelector:
   matchLabels:
     release: kube-prom-stack
