@@ -67,7 +67,7 @@ mongodb:
     username: guestbook-user
     secretKeys:
       userPasswordKey: USERDB_PASSWORD
-      secretName: mongodb-credentials
+      secretName: guestbook-mongodb-userdb
   initContainer:
     image: docker.io/mongo
     tag: latest
