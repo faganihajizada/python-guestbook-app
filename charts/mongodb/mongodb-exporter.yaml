@@ -20,9 +20,9 @@ serviceMonitor:
   namespace: mongodb
   interval: 30s
   additionalLabels:
-    release: kube-prom-stack
+    release: kube-prometheus-stack
   labels:
-    release: kube-prom-stack
+    release: kube-prometheus-stack
     app.kubernetes.io/name: prometheus-mongodb-exporter
 
 # Resource limits and requests
@@ -37,4 +37,4 @@ resources:
 # ServiceMonitor selector
 serviceMonitorSelector:
   matchLabels:
-    release: kube-prom-stack
+    release: kube-prometheus-stack

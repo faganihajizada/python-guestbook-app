@@ -5,10 +5,10 @@ metadata:
   name: {{ include "guestbook-frontend.fullname" . }}-rules
   labels:
     {{- include "guestbook-frontend.labels" . | nindent 4 }}
-    app.kubernetes.io/instance: {{ .Values.monitoring.prometheusOperator.instance | default "kube-prom-stack" }}
+    app.kubernetes.io/instance: {{ .Values.monitoring.prometheusOperator.instance | default "kube-prometheus-stack" }}
     app.kubernetes.io/part-of: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
     app: {{ .Values.monitoring.prometheusOperator.name | default "kube-prometheus-stack" }}
-    release: {{ .Values.monitoring.prometheusOperator.release | default "kube-prom-stack" }}
+    release: {{ .Values.monitoring.prometheusOperator.release | default "kube-prometheus-stack" }}
   namespace: {{ .Values.monitoring.namespace }}
 spec:
   groups:

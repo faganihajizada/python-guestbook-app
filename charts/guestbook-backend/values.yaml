@@ -140,9 +140,9 @@ monitoring:
   namespace: monitoring
 # Config for Prometheus Operator
   prometheusOperator:
-    instance: kube-prom-stack
+    instance: kube-prometheus-stack
     name: kube-prometheus-stack
-    release: kube-prom-stack
+    release: kube-prometheus-stack
   prometheusRules:
     enabled: true
   grafanaDashboards:
