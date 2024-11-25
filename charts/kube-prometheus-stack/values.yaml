@@ -33,3 +33,29 @@ alertmanager:
       - "alertmanager.localhost"
     paths: ["/"]
     pathType: Prefix
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: 'pagerduty'
+      routes:
+      - matchers:
+          - severity = "critical"
+          - namespace = "{{ .Release.Namespace }}"
+      - matchers:
+          - severity = "warning"
+          - namespace = "{{ .Release.Namespace }}"
+    inhibit_rules:
+    - source_matchers:
+        - severity = "critical"
+      target_matchers:
+        - severity = "warning"
+      equal: ['alertname', 'namespace']
+    receivers:
+    - name: 'pagerduty'
+      pagerduty_configs:
+      - routing_key: <YOUR_INTEGRATION_KEY>
+        severity: '{{ if eq .GroupLabels.severity "critical" }}critical{{ else }}warning{{ end }}'
+        description: '{{ template "pagerduty.default.description" . }}'
+        client: 'Alertmanager'
+        client_url: '{{ template "pagerduty.default.clientURL" . }}'
