@@ -25,47 +25,47 @@ Details of the challenge: [instructions.md](instructions.md)
 
 1. Start local environment:
 
-```bash
-    ./start-local.sh
+```console
+./start-local.sh
 ```
 
 2. Run provided [Makefile](./Makefile):
 
-```bash
-    make all
+```console
+make all
 ```
 
 3. View available commands:
 
-```bash
+```console
 
-    $ make help
-    Python Guestbook Application Management
-    ======================================
-    
-    Available commands:
-    
-      Command              Description
-      all                   Build, push and deploy the complete application
-      build                 Build all Docker images
-      build-frontend        Build the frontend Docker image
-      build-backend         Build the backend Docker image
-      push                  Push all Docker images
-      push-frontend         Push the frontend Docker image
-      push-backend          Push the backend Docker image
-      deploy                Deploy the complete application stack
-      delete                Remove all application resources
-      help                  Display available commands with descriptions
-      verify-variables      Verify required variables are set
-    
-    Examples:
-      make all                     # Build, push and deploy everything
-      make deploy                  # Deploy the complete stack
-      make delete                  # Clean up all resources
-    
-    Configuration:
-      REGISTRY = localhost:5000
-      VERSION = 006e5fa
+$ make help
+Python Guestbook Application Management
+======================================
+
+Available commands:
+
+  Command              Description
+  all                   Build, push and deploy the complete application
+  build                 Build all Docker images
+  build-frontend        Build the frontend Docker image
+  build-backend         Build the backend Docker image
+  push                  Push all Docker images
+  push-frontend         Push the frontend Docker image
+  push-backend          Push the backend Docker image
+  deploy                Deploy the complete application stack
+  delete                Remove all application resources
+  help                  Display available commands with descriptions
+  verify-variables      Verify required variables are set
+
+Examples:
+  make all                     # Build, push and deploy everything
+  make deploy                  # Deploy the complete stack
+  make delete                  # Clean up all resources
+
+Configuration:
+  REGISTRY = localhost:5000
+  VERSION = 006e5fa
 ```
 
 ## Access the services
@@ -146,31 +146,37 @@ The examples below are for guestbook-frontend. Please adjust the name of the ser
 ### Scale Down Test
 
 1. Scale down the frontend deployment:
-```bash
+
+```console
 kubectl scale deployment guestbook-frontend --replicas=1 -n guestbook-frontend
 ```
 
 2. Check the HorizontalPodAutoscaler status:
-```bash
+
+```console
 kubectl get hpa guestbook-frontend -n guestbook-frontend
 ```
 
 3. Monitor pod status:
-```bash
+
+```console
 kubectl get pods -n guestbook-frontend -l tier=frontend
 ```
 
 ### Checking Prometheus Alerts
 
 1. Scale down the frontend deployment:
-```bash
+
+```console
 kubectl scale deployment guestbook-frontend --replicas=0 -n guestbook-frontend
 ```
 
 2. Look for the following alerts:
+
    - `GuestbookFrontendNoPods`: Triggers when frontend pods are not available
 
 3. To resolve the alerts, scale the deployment back up:
-```bash
+
+```console
 kubectl scale deployment guestbook-frontend --replicas=2 -n default
 ```
