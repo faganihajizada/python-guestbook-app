@@ -51,7 +51,7 @@ push-frontend: ## Push the frontend Docker image
 push-backend: ## Push the backend Docker image
 	docker push $(BACKEND_IMAGE)
 
-deploy: check-prerequisites create-namespaces deploy-monitoring-stack deploy-frontend  ## Deploy the complete application stack
+deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend  ## Deploy the complete application stack
 
 # Checking for required tools
 check-prerequisites:
