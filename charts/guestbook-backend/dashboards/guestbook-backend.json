@@ -33,12 +33,18 @@
           "tooltip": {
             "mode": "multi",
             "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLast": true
           }
         },
         "fieldConfig": {
           "defaults": {
             "unit": "percent",
             "min": 0,
+            "decimals": 2,
             "thresholds": {
               "mode": "absolute",
               "steps": [
@@ -75,12 +81,18 @@
           "tooltip": {
             "mode": "multi",
             "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLast": true
           }
         },
         "fieldConfig": {
           "defaults": {
             "unit": "megabytes",
             "min": 0,
+            "decimals": 2,
             "thresholds": {
               "mode": "absolute",
               "steps": [
@@ -91,12 +103,170 @@
             }
           }
         }
+      },
+      {
+        "id": 3,
+        "title": "Pod Status",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "sum(kube_pod_status_phase{pod=~\"guestbook-backend.*\"}) by (phase)",
+            "refId": "A",
+            "legendFormat": "{{phase}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Container Restarts",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "sum(kube_pod_container_status_restarts_total{pod=~\"guestbook-backend.*\"}) by (pod)",
+            "refId": "A",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Network I/O",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total{pod=~\"guestbook-backend.*\"}[5m])) by (pod)",
+            "refId": "A",
+            "legendFormat": "{{pod}} Received"
+          },
+          {
+            "expr": "sum(rate(container_network_transmit_bytes_total{pod=~\"guestbook-backend.*\"}[5m])) by (pod)",
+            "refId": "B",
+            "legendFormat": "{{pod}} Transmitted"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "min": 0
+          }
+        }
       }
     ],
     "refresh": "10s",
     "schemaVersion": 38,
     "time": {
-      "from": "now-1h",
+      "from": "now-3h",
       "to": "now"
+    },
+    "tags": ["kubernetes", "backend", "guestbook"],
+    "templating": {
+      "list": [
+        {
+          "name": "namespace",
+          "type": "query",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "query": "label_values(kube_pod_info{pod=~\"guestbook-backend.*\"}, namespace)",
+          "refresh": 2,
+          "regex": "",
+          "sort": 1,
+          "current": {
+            "selected": false,
+            "text": "default",
+            "value": "default"
+          }
+        },
+        {
+          "name": "deployment",
+          "type": "query",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "query": "label_values(kube_deployment_status_replicas{namespace=~\"$namespace\", deployment=~\"guestbook-backend.*\"}, deployment)",
+          "refresh": 2,
+          "regex": "",
+          "sort": 1,
+          "current": {
+            "selected": false,
+            "text": "guestbook-backend",
+            "value": "guestbook-backend"
+          }
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refresh": 2,
+          "options": [
+            {
+              "selected": true,
+              "text": "1m",
+              "value": "1m"
+            },
+            {
+              "selected": false,
+              "text": "5m",
+              "value": "5m"
+            },
+            {
+              "selected": false,
+              "text": "10m",
+              "value": "10m"
+            },
+            {
+              "selected": false,
+              "text": "30m",
+              "value": "30m"
+            }
+          ]
+        }
+      ]
     }
   }

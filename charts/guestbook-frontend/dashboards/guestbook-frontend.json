@@ -29,10 +29,22 @@
         "x": 0,
         "y": 0
       },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLast": true
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
           "min": 0,
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -41,12 +53,6 @@
               { "color": "red", "value": 80 }
             ]
           }
-        }
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
         }
       }
     },
@@ -71,10 +77,22 @@
         "x": 12,
         "y": 0
       },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLast": true
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "megabytes",
           "min": 0,
+          "decimals": 2,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -84,19 +102,171 @@
             ]
           }
         }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Pod Status",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_phase{pod=~\"guestbook-frontend.*\"}) by (phase)",
+          "refId": "A",
+          "legendFormat": "{{phase}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Container Restarts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(kube_pod_container_status_restarts_total{pod=~\"guestbook-frontend.*\"}) by (pod)",
+          "refId": "A",
+          "legendFormat": "{{pod}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "title": "Network I/O",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(container_network_receive_bytes_total{pod=~\"guestbook-frontend.*\"}[5m])) by (pod)",
+          "refId": "A",
+          "legendFormat": "{{pod}} Received"
+        },
+        {
+          "expr": "sum(rate(container_network_transmit_bytes_total{pod=~\"guestbook-frontend.*\"}[5m])) by (pod)",
+          "refId": "B",
+          "legendFormat": "{{pod}} Transmitted"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
         }
       }
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
+  "tags": ["kubernetes", "frontend", "guestbook"],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(kube_pod_info{pod=~\"guestbook-frontend.*\"}, namespace)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "current": {
+          "selected": false,
+          "text": "default",
+          "value": "default"
+        }
+      },
+      {
+        "name": "deployment",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(kube_deployment_status_replicas{namespace=~\"$namespace\", deployment=~\"guestbook-frontend.*\"}, deployment)",
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "current": {
+          "selected": false,
+          "text": "guestbook-frontend",
+          "value": "guestbook-frontend"
+        }
+      },
+      {
+        "name": "interval",
+        "type": "interval",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "refresh": 2,
+        "options": [
+          {
+            "selected": true,
+            "text": "1m",
+            "value": "1m"
+          },
+          {
+            "selected": false,
+            "text": "5m",
+            "value": "5m"
+          },
+          {
+            "selected": false,
+            "text": "10m",
+            "value": "10m"
+          },
+          {
+            "selected": false,
+            "text": "30m",
+            "value": "30m"
+          }
+        ]
+      }
+    ]
+  },
   "time": {
-    "from": "now-1h",
+    "from": "now-3h",
     "to": "now"
   }
 }
