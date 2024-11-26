@@ -33,13 +33,16 @@ MONGODB_PORT := 27017
 # Helm timeout
 HELM_TIMEOUT := 5m
 
-.PHONY: all build push deploy delete create-secrets delete-secrets help
+# Add new variable for script location
+LOCAL_SETUP_SCRIPT := ./start-local.sh
 
-# Remove the 'all' target since it's redundant with 'deploy'
-# all: verify-variables build push deploy
+.PHONY: deploy build push delete create-secrets delete-secrets help setup-local-cluster
 
-# Improve deploy target with better documentation
-deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend show-access  ## Build, push and deploy the complete application with prerequisite checks
+# Rename deploy-with-cluster to all
+all: setup-local-cluster deploy  ## Set up cluster and deploy complete application
+
+# Make deploy target standalone
+deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend show-access  ## Deploy to existing cluster without setup
 
 build: build-frontend build-backend  ## Build all Docker images
 
@@ -115,6 +118,8 @@ deploy-mongodb-exporter: create-namespaces deploy-mongo
 	--wait --timeout $(HELM_TIMEOUT)
 
 deploy-monitoring-stack: create-namespaces
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
 	helm upgrade --install ${PROMETHEUS_STACK_RELEASE} prometheus-community/kube-prometheus-stack \
 	-f $(MONITORING_CHART)/values.yaml -n $(MONITORING_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
@@ -157,9 +162,10 @@ help:  ## Display available commands with descriptions
 	@awk 'BEGIN {FS = ":.*##"; printf "  \033[36m%-20s\033[0m %s\n", "Command", "Description"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Examples:"
-	@echo "  make all                     # Build, push and deploy everything"
-	@echo "  make deploy                  # Deploy the complete stack"
-	@echo "  make delete                  # Clean up all resources"
+	@echo "  make setup-local-cluster   # Set up a local Kind cluster with registry and ingress"
+	@echo "  make all                   # Set up cluster and deploy complete application"
+	@echo "  make deploy                # Deploy to existing cluster without cluster setup"
+	@echo "  make delete                # Clean up all resources"
 	@echo ""
 	@echo "Configuration:"
 	@echo "  REGISTRY = $(REGISTRY)"
@@ -168,3 +174,13 @@ help:  ## Display available commands with descriptions
 verify-variables:  ## Verify required variables are set
 	@test -n "$(REGISTRY)" || (echo "REGISTRY is not set" && exit 1)
 	@test -n "$(VERSION)" || (echo "VERSION is not set" && exit 1)
+
+setup-local-cluster: ## Setup local Kind cluster with registry and ingress
+	@echo "Setting up local Kind cluster..."
+	@chmod +x $(LOCAL_SETUP_SCRIPT)
+	@$(LOCAL_SETUP_SCRIPT)
+	@echo "Waiting for ingress-nginx to be ready..."
+	@kubectl wait --namespace ingress-nginx \
+		--for=condition=ready pod \
+		--selector=app.kubernetes.io/component=controller \
+		--timeout=90s || (echo "Warning: Timeout waiting for ingress-nginx" && true)

@@ -23,30 +23,24 @@ Details of the challenge: [instructions.md](instructions.md)
 
 ## Quick Start
 
-1. Start local environment:
+1. Run provided [Makefile](./Makefile):
 
 ```console
-./start-local.sh
-```
-
-2. Run provided [Makefile](./Makefile):
-
-```console
-make deploy
+make all
 ```
 
 3. View available commands:
 
 ```console
-
-$ make help
+make help
 Python Guestbook Application Management
 ======================================
 
 Available commands:
 
   Command              Description
-  deploy                Build, push and deploy the complete application with prerequisite checks
+  all                   Set up cluster and deploy complete application
+  deploy                Deploy to existing cluster without setup
   build                 Build all Docker images
   build-frontend        Build the frontend Docker image
   build-backend         Build the backend Docker image
@@ -54,13 +48,16 @@ Available commands:
   push-frontend         Push the frontend Docker image
   push-backend          Push the backend Docker image
   delete                Remove all application resources
+  show-access           Display access URLs and credentials
   help                  Display available commands with descriptions
   verify-variables      Verify required variables are set
+  setup-local-cluster   Setup local Kind cluster with registry and ingress
 
 Examples:
-  make all                     # Build, push and deploy everything
-  make deploy                  # Deploy the complete stack
-  make delete                  # Clean up all resources
+  make setup-local-cluster   # Set up a local Kind cluster with registry and ingress
+  make all                   # Set up cluster and deploy complete application
+  make deploy                # Deploy to existing cluster without cluster setup
+  make delete                # Clean up all resources
 
 Configuration:
   REGISTRY = localhost:5000
