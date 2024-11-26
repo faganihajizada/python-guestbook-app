@@ -39,7 +39,7 @@ HELM_TIMEOUT := 5m
 # all: verify-variables build push deploy
 
 # Improve deploy target with better documentation
-deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend  ## Build, push and deploy the complete application with prerequisite checks
+deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend show-access  ## Build, push and deploy the complete application with prerequisite checks
 
 build: build-frontend build-backend  ## Build all Docker images
 
@@ -137,6 +137,16 @@ delete-namespaces:
 	for ns in $(FRONTEND_NAMESPACE) $(BACKEND_NAMESPACE) $(MONGO_NAMESPACE) $(MONITORING_NAMESPACE); do \
 		kubectl delete namespace $$ns --wait=true --timeout=$(HELM_TIMEOUT) --ignore-not-found; \
 	done
+
+show-access: ## Display access URLs and credentials
+	@echo "\nAccess URLs:"
+	@echo "  Frontend: http://frontend.localhost"
+	@echo "  Grafana: http://grafana.localhost"
+	@echo "  Prometheus: http://prometheus.localhost"
+	@echo "  Alertmanager: http://alertmanager.localhost"
+	@echo "\nGrafana Credentials:"
+	@echo "  Username: admin"
+	@echo "  Password: $$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d)"
 
 help:  ## Display available commands with descriptions
 	@echo "Python Guestbook Application Management"
