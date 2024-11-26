@@ -18,10 +18,12 @@ BACKEND_CHART := ./charts/guestbook-backend
 MONGO_CHART := ./charts/mongodb
 MONITORING_CHART := ./charts/kube-prometheus-stack
 
-# Release names
+# Helm Release names
 FRONTEND_RELEASE := guestbook-frontend
 BACKEND_RELEASE := guestbook-backend
 MONGO_RELEASE := guestbook-mongodb
+MONGO_EXPORTER_RELEASE := mongodb-exporter
+PROMETHEUS_STACK_RELEASE := kube-prometheus-stack
 
 # MongoDB secrets and configuration
 MONGODB_SECRET_NAME := guestbook-mongodb
@@ -108,20 +110,20 @@ deploy-frontend: create-namespaces deploy-backend deploy-mongodb-exporter
 deploy-mongodb-exporter: create-namespaces deploy-mongo
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo update
-	helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter \
+	helm upgrade --install ${MONGO_EXPORTER_RELEASE} prometheus-community/prometheus-mongodb-exporter \
 	-f $(MONGO_CHART)/mongodb-exporter.yaml -n $(MONGO_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
 
 deploy-monitoring-stack: create-namespaces
-	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+	helm upgrade --install ${PROMETHEUS_STACK_RELEASE} prometheus-community/kube-prometheus-stack \
 	-f $(MONITORING_CHART)/values.yaml -n $(MONITORING_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
 
 delete: delete-monitoring delete-apps delete-secrets delete-namespaces  ## Remove all application resources
 
 delete-monitoring:
-	helm uninstall mongodb-exporter -n $(MONGO_NAMESPACE) --wait || true
-	helm uninstall kube-prometheus-stack -n $(MONITORING_NAMESPACE) --wait || true
+	helm uninstall ${MONGO_EXPORTER_RELEASE} -n $(MONGO_NAMESPACE) --wait || true
+	helm uninstall ${PROMETHEUS_STACK_RELEASE} -n $(MONITORING_NAMESPACE) --wait || true
 
 delete-apps:
 	helm uninstall $(FRONTEND_RELEASE) -n $(FRONTEND_NAMESPACE) --wait || true
