@@ -1,10 +1,9 @@
 # Variables
-VERSION ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo 'latest')
-ifeq ($(VERSION),)
-VERSION := latest
-endif
+GIT_VERSION := $(shell git rev-parse --short HEAD 2>/dev/null || echo 'latest')
+VERSION ?= latest
+VERSIONS := $(if $(GIT_VERSION),$(GIT_VERSION) latest,latest)
 
-REGISTRY ?= localhost:5000
+REGISTRY ?= 127.0.0.1:5000
 FRONTEND_DIR := ./src/frontend
 BACKEND_DIR := ./src/backend
 FRONTEND_IMAGE := $(REGISTRY)/python-guestbook-frontend:$(VERSION)
@@ -42,29 +41,39 @@ LOCAL_SETUP_SCRIPT := ./start-local.sh
 
 .PHONY: deploy build push delete create-secrets delete-secrets help setup-local-cluster delete-all
 
-# Rename deploy-with-cluster to all
-all: check-prerequisites verify-variables setup-local-cluster verify-registry build push deploy  ## Set up cluster and deploy complete application
+# Set up cluster and deploy complete application
+all: check-prerequisites verify-variables setup-local-cluster verify-registry deploy
 
-# Make deploy target standalone
-deploy: verify-variables verify-registry build push create-namespaces deploy-monitoring-stack deploy-mongo deploy-backend deploy-frontend show-access  ## Deploy to existing cluster without setup
+# Deploy to existing cluster without setup
+deploy: check-prerequisites verify-variables verify-registry build push create-namespaces deploy-monitoring-stack deploy-mongo deploy-backend deploy-frontend show-access
 
 build: build-frontend build-backend  ## Build all Docker images
 
 build-frontend:  ## Build the frontend Docker image
-	@echo "Building frontend image: $(FRONTEND_IMAGE)"
-	docker build -t $(FRONTEND_IMAGE) ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1)
+	@echo "Building frontend images"
+	@for ver in $(VERSIONS); do \
+		echo "Building: $(REGISTRY)/python-guestbook-frontend:$$ver"; \
+		docker build -t $(REGISTRY)/python-guestbook-frontend:$$ver ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1); \
+	done
 
 build-backend: ## Build the backend Docker image
-	@echo "Building backend image: $(BACKEND_IMAGE)"
-	docker build -t $(BACKEND_IMAGE) ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1)
+	@echo "Building backend images"
+	@for ver in $(VERSIONS); do \
+		echo "Building: $(REGISTRY)/python-guestbook-backend:$$ver"; \
+		docker build -t $(REGISTRY)/python-guestbook-backend:$$ver ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1); \
+	done
 
 push: push-frontend push-backend  ## Push all Docker images
 
 push-frontend: ## Push the frontend Docker image
-	docker push $(FRONTEND_IMAGE)
+	@for ver in $(VERSIONS); do \
+		docker push $(REGISTRY)/python-guestbook-frontend:$$ver; \
+	done
 
 push-backend: ## Push the backend Docker image
-	docker push $(BACKEND_IMAGE)
+	@for ver in $(VERSIONS); do \
+		docker push $(REGISTRY)/python-guestbook-backend:$$ver; \
+	done
 
 # Checking for required tools
 check-prerequisites:

@@ -9,7 +9,7 @@ fullnameOverride: ""
 image:
   # The repository to pull the image from 
   # Set as local registry created by /start-local.sh script
-  repository: localhost:5000/python-guestbook-backend
+  repository: 127.0.0.1:5000/python-guestbook-backend
   tag: "latest"
   pullPolicy: Always
 
