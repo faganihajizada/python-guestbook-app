@@ -138,3 +138,36 @@ Each Helm Chart folder includes a README.md file that provides detailed informat
 ## Configuration
 
 Each component can be configured via their respective `values.yaml` files. See individual chart READMEs for detailed configuration options.
+
+## Testing Scaling and Alerts
+
+### Scale Down Test
+
+1. Scale down the frontend deployment:
+```bash
+kubectl scale deployment guestbook-frontend --replicas=1 -n guestbook-frontend
+```
+
+2. Check the HorizontalPodAutoscaler status:
+```bash
+kubectl get hpa guestbook-frontend -n guestbook-frontend
+```
+
+3. Monitor pod status:
+```bash
+kubectl get pods -n guestbook-frontend -l app=guestbook-frontend
+```
+
+### Checking Prometheus Alerts
+
+1. Access the Prometheus UI at http://prometheus.localhost/alerts
+
+2. Look for the following alerts:
+   - `GuestbookFrontendDown`: Triggers when frontend pods are not available
+   - `GuestbookBackendDown`: Triggers when backend pods are not available
+   - `GuestbookHighLatency`: Triggers when request latency exceeds threshold
+
+3. To resolve the alerts, scale the deployment back up:
+```bash
+kubectl scale deployment guestbook-frontend --replicas=2 -n default
+```
