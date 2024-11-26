@@ -52,12 +52,14 @@ Available commands:
   help                  Display available commands with descriptions
   verify-variables      Verify required variables are set
   setup-local-cluster   Setup local Kind cluster with registry and ingress
+  delete-all            Delete Kind cluster
 
 Examples:
   make setup-local-cluster   # Set up a local Kind cluster with registry and ingress
   make all                   # Set up cluster and deploy complete application
   make deploy                # Deploy to existing cluster without cluster setup
   make delete                # Clean up all resources
+  make delete-all            # Clean up all resources and delete Kind cluster
 
 Configuration:
   REGISTRY = localhost:5000

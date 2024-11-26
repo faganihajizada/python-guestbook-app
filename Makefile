@@ -36,7 +36,7 @@ HELM_TIMEOUT := 5m
 # Add new variable for script location
 LOCAL_SETUP_SCRIPT := ./start-local.sh
 
-.PHONY: deploy build push delete create-secrets delete-secrets help setup-local-cluster
+.PHONY: deploy build push delete create-secrets delete-secrets help setup-local-cluster delete-all
 
 # Rename deploy-with-cluster to all
 all: setup-local-cluster deploy  ## Set up cluster and deploy complete application
@@ -166,6 +166,7 @@ help:  ## Display available commands with descriptions
 	@echo "  make all                   # Set up cluster and deploy complete application"
 	@echo "  make deploy                # Deploy to existing cluster without cluster setup"
 	@echo "  make delete                # Clean up all resources"
+	@echo "  make delete-all            # Clean up all resources and delete Kind cluster"
 	@echo ""
 	@echo "Configuration:"
 	@echo "  REGISTRY = $(REGISTRY)"
@@ -179,8 +180,19 @@ setup-local-cluster: ## Setup local Kind cluster with registry and ingress
 	@echo "Setting up local Kind cluster..."
 	@chmod +x $(LOCAL_SETUP_SCRIPT)
 	@$(LOCAL_SETUP_SCRIPT)
+	@echo "Waiting 60 seconds for cluster initialization..."
+	@sleep 60
 	@echo "Waiting for ingress-nginx to be ready..."
 	@kubectl wait --namespace ingress-nginx \
 		--for=condition=ready pod \
 		--selector=app.kubernetes.io/component=controller \
-		--timeout=90s || (echo "Warning: Timeout waiting for ingress-nginx" && true)
+		--timeout=90s
+	@echo "Waiting for admission patch job..."
+	@kubectl wait --namespace ingress-nginx \
+		--for=condition=complete job/ingress-nginx-admission-patch \
+		--timeout=90s
+
+# Complete cleanup including Kind cluster
+delete-all: delete  ## Delete Kind cluster
+	@echo "Deleting Kind cluster..."
+	@kind delete cluster || echo "No Kind cluster found or error deleting cluster"
