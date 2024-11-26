@@ -17,99 +17,134 @@ spec:
     # Pod Health
     - alert: GuestbookFrontendPodsNotReady
       expr: sum(kube_pod_status_ready{condition="true", namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}) < {{ .Values.replicaCount | default 1 }}
-      for: 5m
+      for: {{ .Values.monitoring.alerting.podsNotReadyDuration | default "5m" }}
       labels:
-        severity: critical
+        severity: {{ .Values.monitoring.alerting.podsNotReadySeverity | default "critical" }}
       annotations:
         summary: "Not all frontend pods are ready"
-        description: "Some frontend pods have been in non-ready state for more than 5 minutes"
+        description: "Some frontend pods have been in non-ready state for more than {{ .Values.monitoring.alerting.podsNotReadyDuration | default "5m" }}"
 
     # Pod Restarts
     - alert: GuestbookFrontendFrequentRestarts
-      expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[1h]) > 2
-      for: 5m
+      expr: increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[1h]) > {{ .Values.monitoring.alerting.restartThreshold | default 2 }}
+      for: {{ .Values.monitoring.alerting.restartDuration | default "5m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.restartSeverity | default "warning" }}
       annotations:
         summary: "Frequent frontend pod restarts detected"
-        description: "Frontend pod has restarted more than 2 times in the last hour"
+        description: "Frontend pod has restarted more than {{ .Values.monitoring.alerting.restartThreshold | default 2 }} times in the last hour"
 
     # CPU Usage
     - alert: GuestbookFrontendHighCPUUsage
       expr: |
         sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""}[5m]))
         /
-        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="cpu"}) > 0.85
-      for: 15m
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="cpu"}) > {{ .Values.monitoring.alerting.cpuThreshold | default 0.85 }}
+      for: {{ .Values.monitoring.alerting.cpuDuration | default "15m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.cpuSeverity | default "warning" }}
       annotations:
         summary: "High frontend CPU usage"
-        description: "Frontend CPU usage is above 85% of the limit for 15 minutes"
+        description: "Frontend CPU usage is above {{ mul (.Values.monitoring.alerting.cpuThreshold | default 0.85) 100 }}% of the limit for {{ .Values.monitoring.alerting.cpuDuration | default "15m" }}"
 
     # Memory Usage
     - alert: GuestbookFrontendHighMemoryUsage
       expr: |
         sum(container_memory_working_set_bytes{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", container!=""})
         /
-        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"}) > 0.85
-      for: 15m
+        sum(kube_pod_container_resource_limits{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", resource="memory"}) > {{ .Values.monitoring.alerting.memoryThreshold | default 0.85 }}
+      for: {{ .Values.monitoring.alerting.memoryDuration | default "15m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.memorySeverity | default "warning" }}
       annotations:
         summary: "High frontend memory usage"
-        description: "Frontend memory usage is above 85% of the limit for 15 minutes"
+        description: "Frontend memory usage is above {{ mul (.Values.monitoring.alerting.memoryThreshold | default 0.85) 100 }}% of the limit for {{ .Values.monitoring.alerting.memoryDuration | default "15m" }}"
 
-    # OOM Kills (added)
+    # OOM Kills
     - alert: GuestbookFrontendOOMKilled
       expr: kube_pod_container_status_last_terminated_reason{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", reason="OOMKilled"} == 1
-      for: 1m
+      for: {{ .Values.monitoring.alerting.oomDuration | default "1m" }}
       labels:
-        severity: critical
+        severity: {{ .Values.monitoring.alerting.oomSeverity | default "critical" }}
       annotations:
         summary: "Frontend container OOM killed"
         description: "Frontend container was terminated due to Out Of Memory condition"
 
-    # Pod Pending Status (added)
+    # Pod Pending Status
     - alert: GuestbookFrontendPodsPending
       expr: kube_pod_status_phase{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", phase="Pending"} == 1
-      for: 5m
+      for: {{ .Values.monitoring.alerting.pendingDuration | default "5m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.pendingSeverity | default "warning" }}
       annotations:
         summary: "Frontend pods in pending state"
-        description: "Some frontend pods are stuck in pending state for more than 5 minutes"
+        description: "Some frontend pods are stuck in pending state for more than {{ .Values.monitoring.alerting.pendingDuration | default "5m" }}"
 
-    # Container Status (added)
+    # Container Status
     - alert: GuestbookFrontendContainerWaiting
       expr: kube_pod_container_status_waiting{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"} == 1
-      for: 5m
+      for: {{ .Values.monitoring.alerting.containerWaitingDuration | default "5m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.containerWaitingSeverity | default "warning" }}
       annotations:
         summary: "Frontend container in waiting state"
-        description: "Frontend container has been in waiting state for more than 5 minutes"
+        description: "Frontend container has been in waiting state for more than {{ .Values.monitoring.alerting.containerWaitingDuration | default "5m" }}"
 
-    # Network Errors (added)
+    # Network Errors
     - alert: GuestbookFrontendHighNetworkErrors
       expr: |
-        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[5m])) > 0.1
-      for: 15m
+        sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[5m])) > {{ .Values.monitoring.alerting.networkErrorThreshold | default 0.1 }}
+      for: {{ .Values.monitoring.alerting.networkErrorDuration | default "15m" }}
       labels:
-        severity: warning
+        severity: {{ .Values.monitoring.alerting.networkErrorSeverity | default "warning" }}
       annotations:
         summary: "High network error rate detected"
-        description: "Frontend is experiencing elevated network errors for 15 minutes"
+        description: "Frontend is experiencing elevated network errors for {{ .Values.monitoring.alerting.networkErrorDuration | default "15m" }}"
 
     # No Pods Running
     - alert: GuestbookFrontendNoPods
       expr: kube_deployment_status_replicas_available{namespace="{{ .Release.Namespace }}", deployment="guestbook-frontend"} == 0
-      for: 1m
+      for: {{ .Values.monitoring.alerting.noPodsRunningDuration | default "1m" }}
       labels:
-        severity: critical
+        severity: {{ .Values.monitoring.alerting.noPodsRunningSeverity | default "critical" }}
       annotations:
         summary: "No frontend pods are running"
         description: "There are no available pods running for the frontend deployment"
+
+    # Backend Connection Issues
+    - alert: GuestbookFrontendBackendConnectionFailures
+      expr: |
+        increase(flask_http_request_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", status="502"}[5m]) > 0
+      for: {{ .Values.monitoring.alerting.backendConnectionDuration | default "2m" }}
+      labels:
+        severity: {{ .Values.monitoring.alerting.backendConnectionSeverity | default "critical" }}
+      annotations:
+        summary: "Backend connection issues detected"
+        description: "Frontend is returning 502 errors which might indicate backend connection problems"
+
+    # HTTP Request Latency
+    - alert: GuestbookFrontendHighLatency
+      expr: |
+        histogram_quantile(0.95, rate(flask_http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}", service="guestbook-frontend"}[5m])) > {{ .Values.monitoring.alerting.latencyThreshold | default 2 }}
+      for: {{ .Values.monitoring.alerting.latencyDuration | default "10m" }}
+      labels:
+        severity: {{ .Values.monitoring.alerting.latencySeverity | default "warning" }}
+      annotations:
+        summary: "High HTTP request latency"
+        description: "95th percentile of HTTP request latency is above {{ .Values.monitoring.alerting.latencyThreshold | default 2 }} seconds"
+
+    # HTTP Error Rate
+    - alert: GuestbookFrontendHighErrorRate
+      expr: |
+        sum(rate(flask_http_request_total{namespace="{{ .Release.Namespace }}", service="guestbook-frontend", status=~"5.."}[5m]))
+        /
+        sum(rate(flask_http_request_total{namespace="{{ .Release.Namespace }}", service="guestbook-frontend"}[5m])) > {{ .Values.monitoring.alerting.errorRateThreshold | default 0.05 }}
+      for: {{ .Values.monitoring.alerting.errorRateDuration | default "5m" }}
+      labels:
+        severity: {{ .Values.monitoring.alerting.errorRateSeverity | default "critical" }}
+      annotations:
+        summary: "High HTTP error rate"
+        description: "More than {{ mul (.Values.monitoring.alerting.errorRateThreshold | default 0.05) 100 }}% of requests are resulting in 5xx errors"
 
     # Recording Rules for metrics
     - record: guestbook_frontend:cpu_usage_percentage
@@ -127,4 +162,18 @@ spec:
     - record: guestbook_frontend:network_error_rate
       expr: |
         sum(rate(container_network_errors_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*"}[5m]))
+
+    - record: guestbook_frontend:request_latency_p95
+      expr: |
+        histogram_quantile(0.95, rate(flask_http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}", service="guestbook-frontend"}[5m]))
+
+    - record: guestbook_frontend:error_rate_percentage
+      expr: |
+        100 * sum(rate(flask_http_request_total{namespace="{{ .Release.Namespace }}", service="guestbook-frontend", status=~"5.."}[5m]))
+        /
+        sum(rate(flask_http_request_total{namespace="{{ .Release.Namespace }}", service="guestbook-frontend"}[5m]))
+
+    - record: guestbook_frontend:backend_error_rate
+      expr: |
+        sum(rate(flask_http_request_total{namespace="{{ .Release.Namespace }}", pod=~"guestbook-frontend.*", status="502"}[5m]))
 {{- end }}

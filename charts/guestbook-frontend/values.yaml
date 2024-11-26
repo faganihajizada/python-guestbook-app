@@ -147,3 +147,62 @@ monitoring:
   serviceMonitor:
     enabled: true
     interval: 30s
+  alerting:
+    # Pod Health
+    podsNotReadyDuration: "5m"
+    podsNotReadySeverity: "critical"
+
+    # Pod Restarts
+    restartThreshold: 2
+    restartDuration: "5m"
+    restartSeverity: "warning"
+
+    # CPU Usage
+    cpuThreshold: 0.85
+    cpuDuration: "15m"
+    cpuSeverity: "warning"
+
+    # Memory Usage
+    memoryThreshold: 0.85
+    memoryDuration: "15m"
+    memorySeverity: "warning"
+
+    # OOM Kills
+    oomDuration: "1m"
+    oomSeverity: "critical"
+
+    # Pod Pending Status
+    pendingDuration: "5m"
+    pendingSeverity: "warning"
+
+    # Container Status
+    containerWaitingDuration: "5m"
+    containerWaitingSeverity: "warning"
+
+    # Network Errors
+    networkErrorThreshold: 0.1
+    networkErrorDuration: "15m"
+    networkErrorSeverity: "warning"
+
+    # No Pods Running
+    noPodsRunningDuration: "1m"
+    noPodsRunningSeverity: "critical"
+
+    # HTTP Request Latency
+    latencyThreshold: 2
+    latencyDuration: "10m"
+    latencySeverity: "warning"
+
+    # HTTP Error Rate
+    errorRateThreshold: 0.05
+    errorRateDuration: "5m"
+    errorRateSeverity: "critical"
+
+    # Request Rate
+    requestRateThreshold: 100
+    requestRateDuration: "5m"
+    requestRateSeverity: "warning"
+
+    # Backend Connection Issues
+    backendConnectionDuration: "2m"
+    backendConnectionSeverity: "critical" 
