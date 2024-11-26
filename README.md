@@ -32,7 +32,7 @@ Details of the challenge: [instructions.md](instructions.md)
 2. Run provided [Makefile](./Makefile):
 
 ```console
-make all
+make deploy
 ```
 
 3. View available commands:
@@ -46,14 +46,13 @@ Python Guestbook Application Management
 Available commands:
 
   Command              Description
-  all                   Build, push and deploy the complete application
+  deploy                Build, push and deploy the complete application with prerequisite checks
   build                 Build all Docker images
   build-frontend        Build the frontend Docker image
   build-backend         Build the backend Docker image
   push                  Push all Docker images
   push-frontend         Push the frontend Docker image
   push-backend          Push the backend Docker image
-  deploy                Deploy the complete application stack
   delete                Remove all application resources
   help                  Display available commands with descriptions
   verify-variables      Verify required variables are set
@@ -65,7 +64,7 @@ Examples:
 
 Configuration:
   REGISTRY = localhost:5000
-  VERSION = 006e5fa
+  VERSION = [VERSION]
 ```
 
 ## Access the services

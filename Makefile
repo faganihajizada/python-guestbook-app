@@ -33,15 +33,19 @@ HELM_TIMEOUT := 5m
 
 .PHONY: all build push deploy delete create-secrets delete-secrets help
 
-all: verify-variables build push deploy  ## Build, push and deploy the complete application
+# Remove the 'all' target since it's redundant with 'deploy'
+# all: verify-variables build push deploy
+
+# Improve deploy target with better documentation
+deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend  ## Build, push and deploy the complete application with prerequisite checks
 
 build: build-frontend build-backend  ## Build all Docker images
 
 build-frontend:  ## Build the frontend Docker image
-	docker build -t $(FRONTEND_IMAGE) ./$(FRONTEND_DIR)
+	docker build -t $(FRONTEND_IMAGE) ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1)
 
 build-backend: ## Build the backend Docker image
-	docker build -t $(BACKEND_IMAGE) ./$(BACKEND_DIR)
+	docker build -t $(BACKEND_IMAGE) ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1)
 
 push: push-frontend push-backend  ## Push all Docker images
 
@@ -50,8 +54,6 @@ push-frontend: ## Push the frontend Docker image
 
 push-backend: ## Push the backend Docker image
 	docker push $(BACKEND_IMAGE)
-
-deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend  ## Deploy the complete application stack
 
 # Checking for required tools
 check-prerequisites:
