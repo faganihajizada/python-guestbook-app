@@ -15,6 +15,10 @@ spec:
       {{- include "guestbook-backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "{{ .Values.monitoring.metrics.enabled }}"
+        prometheus.io/port: "{{ .Values.monitoring.metrics.port }}"
+        prometheus.io/path: "/metrics"
       labels:
         {{- include "guestbook-backend.selectorLabels" . | nindent 8 }}
         {{- with .Values.deployment.labels }}
