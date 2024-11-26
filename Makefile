@@ -1,5 +1,9 @@
 # Variables
-VERSION ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo 'dev')
+VERSION ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo 'latest')
+ifeq ($(VERSION),)
+VERSION := latest
+endif
+
 REGISTRY ?= localhost:5000
 FRONTEND_DIR := ./src/frontend
 BACKEND_DIR := ./src/backend
@@ -39,17 +43,19 @@ LOCAL_SETUP_SCRIPT := ./start-local.sh
 .PHONY: deploy build push delete create-secrets delete-secrets help setup-local-cluster delete-all
 
 # Rename deploy-with-cluster to all
-all: setup-local-cluster deploy  ## Set up cluster and deploy complete application
+all: check-prerequisites verify-variables setup-local-cluster verify-registry build push deploy  ## Set up cluster and deploy complete application
 
 # Make deploy target standalone
-deploy: check-prerequisites verify-variables build push create-namespaces deploy-monitoring-stack deploy-frontend show-access  ## Deploy to existing cluster without setup
+deploy: verify-variables verify-registry build push create-namespaces deploy-monitoring-stack deploy-mongo deploy-backend deploy-frontend show-access  ## Deploy to existing cluster without setup
 
 build: build-frontend build-backend  ## Build all Docker images
 
 build-frontend:  ## Build the frontend Docker image
+	@echo "Building frontend image: $(FRONTEND_IMAGE)"
 	docker build -t $(FRONTEND_IMAGE) ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1)
 
 build-backend: ## Build the backend Docker image
+	@echo "Building backend image: $(BACKEND_IMAGE)"
 	docker build -t $(BACKEND_IMAGE) ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1)
 
 push: push-frontend push-backend  ## Push all Docker images
@@ -174,7 +180,9 @@ help:  ## Display available commands with descriptions
 
 verify-variables:  ## Verify required variables are set
 	@test -n "$(REGISTRY)" || (echo "REGISTRY is not set" && exit 1)
-	@test -n "$(VERSION)" || (echo "VERSION is not set" && exit 1)
+	@test -n "$(VERSION)" || (echo "VERSION is not set, using 'latest'" && VERSION=latest)
+	@echo "Building with VERSION=$(VERSION)"
+	@echo "Using REGISTRY=$(REGISTRY)"
 
 setup-local-cluster: ## Setup local Kind cluster with registry and ingress
 	@echo "Setting up local Kind cluster..."
@@ -196,3 +204,8 @@ setup-local-cluster: ## Setup local Kind cluster with registry and ingress
 delete-all: delete  ## Delete Kind cluster
 	@echo "Deleting Kind cluster..."
 	@kind delete cluster || echo "No Kind cluster found or error deleting cluster"
+
+verify-registry:  ## Verify registry is accessible
+	@echo "Verifying registry $(REGISTRY) is accessible..."
+	@docker ps > /dev/null 2>&1 || (echo "Docker is not running" && exit 1)
+	@curl -s $(REGISTRY)/v2/_catalog > /dev/null || (echo "Registry $(REGISTRY) is not accessible" && exit 1)

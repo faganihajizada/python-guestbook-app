@@ -53,6 +53,7 @@ Available commands:
   verify-variables      Verify required variables are set
   setup-local-cluster   Setup local Kind cluster with registry and ingress
   delete-all            Delete Kind cluster
+  verify-registry       Verify registry is accessible
 
 Examples:
   make setup-local-cluster   # Set up a local Kind cluster with registry and ingress
