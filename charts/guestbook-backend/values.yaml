@@ -102,7 +102,7 @@ pdb:
 # Autoscaling configuration
 # Can be used to automatically scale the guestbook-backend pod
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
