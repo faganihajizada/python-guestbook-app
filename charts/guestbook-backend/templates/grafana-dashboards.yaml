@@ -8,5 +8,5 @@ metadata:
   labels:
     grafana_dashboard: "true"
 data:
-  backend-metrics.json: {{ .Files.Get "dashboards/guestbook-backend.json" | quote }}
+  backend-dashboard.json: {{ .Files.Get "dashboards/guestbook-backend.json" | quote }}
 {{- end }}

@@ -11,7 +11,7 @@ image:
   # Set as local registry created by /start-local.sh script
   repository: localhost:5000/python-guestbook-backend
   tag: "latest"
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 # ServiceAccount configuration
 serviceAccount:

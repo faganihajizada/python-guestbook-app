@@ -5,7 +5,7 @@
     "editable": true,
     "graphTooltip": 0,
     "title": "Guestbook Backend",
-    "uid": "guestbook-backend-simple",
+    "uid": "guestbook-backend-dashboard",
     "version": 1,
     "panels": [
       {
@@ -191,14 +191,109 @@
             "min": 0
           }
         }
+      },
+      {
+        "id": 6,
+        "title": "HTTP Request Rate",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "rate(flask_http_request_total{pod=~\"guestbook-backend.*\"}[5m])",
+            "refId": "A",
+            "legendFormat": "{{method}} {{path}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "min": 0
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "HTTP Response Latency",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "rate(flask_http_request_duration_seconds_sum{pod=~\"guestbook-backend.*\"}[5m]) / rate(flask_http_request_duration_seconds_count{pod=~\"guestbook-backend.*\"}[5m])",
+            "refId": "A",
+            "legendFormat": "{{method}} {{path}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "min": 0,
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 0.5 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "HTTP Response Codes",
+        "type": "timeseries",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(flask_http_request_total{pod=~\"guestbook-backend.*\"}[5m])) by (status)",
+            "refId": "A",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null }
+              ]
+            }
+          }
+        }
       }
     ],
     "refresh": "10s",
     "schemaVersion": 38,
-    "time": {
-      "from": "now-3h",
-      "to": "now"
-    },
     "tags": ["kubernetes", "backend", "guestbook"],
     "templating": {
       "list": [
@@ -212,12 +307,7 @@
           "query": "label_values(kube_pod_info{pod=~\"guestbook-backend.*\"}, namespace)",
           "refresh": 2,
           "regex": "",
-          "sort": 1,
-          "current": {
-            "selected": false,
-            "text": "default",
-            "value": "default"
-          }
+          "sort": 1
         },
         {
           "name": "deployment",
@@ -229,12 +319,7 @@
           "query": "label_values(kube_deployment_status_replicas{namespace=~\"$namespace\", deployment=~\"guestbook-backend.*\"}, deployment)",
           "refresh": 2,
           "regex": "",
-          "sort": 1,
-          "current": {
-            "selected": false,
-            "text": "guestbook-backend",
-            "value": "guestbook-backend"
-          }
+          "sort": 1
         },
         {
           "name": "interval",
@@ -268,5 +353,9 @@
           ]
         }
       ]
+    },
+    "time": {
+      "from": "now-3h",
+      "to": "now"
     }
   }
