@@ -87,6 +87,7 @@ Note: The above URLs assume you are using the default ingress configuration with
 │   ├── guestbook-backend
 │   │   ├── Chart.yaml
 │   │   ├── README.md
+│   │   ├── README.md.gotmpl
 │   │   ├── dashboards
 │   │   │   └── guestbook-backend.json
 │   │   ├── templates
@@ -100,14 +101,17 @@ Note: The above URLs assume you are using the default ingress configuration with
 │   │   │   ├── prometheus-rules.yaml
 │   │   │   ├── secret.yaml
 │   │   │   ├── service.yaml
-│   │   │   └── serviceaccount.yaml
+│   │   │   ├── serviceaccount.yaml
+│   │   │   └── servicemonitor.yaml
 │   │   └── values.yaml
 │   ├── guestbook-frontend
 │   │   ├── Chart.yaml
 │   │   ├── README.md
+│   │   ├── README.md.gotmpl
 │   │   ├── dashboards
 │   │   │   └── guestbook-frontend.json
 │   │   ├── templates
+│   │   │   ├── NOTES.txt
 │   │   │   ├── _helpers.tpl
 │   │   │   ├── deployment.yaml
 │   │   │   ├── grafana-dashboard.yaml
@@ -116,7 +120,8 @@ Note: The above URLs assume you are using the default ingress configuration with
 │   │   │   ├── pdb.yaml
 │   │   │   ├── prometheus-rules.yaml
 │   │   │   ├── service.yaml
-│   │   │   └── serviceaccount.yaml
+│   │   │   ├── serviceaccount.yaml
+│   │   │   └── servicemonitor.yaml
 │   │   └── values.yaml
 │   ├── kube-prometheus-stack
 │   │   ├── README.md
