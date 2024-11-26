@@ -3,11 +3,9 @@ GIT_VERSION := $(shell git rev-parse --short HEAD 2>/dev/null || echo 'latest')
 VERSION ?= latest
 VERSIONS := $(if $(GIT_VERSION),$(GIT_VERSION) latest,latest)
 
-REGISTRY ?= 127.0.0.1:5000
+LOCAL_REGISTRY ?= localhost:5000
 FRONTEND_DIR := ./src/frontend
 BACKEND_DIR := ./src/backend
-FRONTEND_IMAGE := $(REGISTRY)/python-guestbook-frontend:$(VERSION)
-BACKEND_IMAGE := $(REGISTRY)/python-guestbook-backend:$(VERSION)
 
 # Namespaces
 MONGO_NAMESPACE := mongodb
@@ -52,27 +50,29 @@ build: build-frontend build-backend  ## Build all Docker images
 build-frontend:  ## Build the frontend Docker image
 	@echo "Building frontend images"
 	@for ver in $(VERSIONS); do \
-		echo "Building: $(REGISTRY)/python-guestbook-frontend:$$ver"; \
-		docker build -t $(REGISTRY)/python-guestbook-frontend:$$ver ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1); \
+		echo "Building: $(LOCAL_REGISTRY)/python-guestbook-frontend:$$ver"; \
+		docker build -t $(LOCAL_REGISTRY)/python-guestbook-frontend:$$ver ./$(FRONTEND_DIR) || (echo "Frontend build failed" && exit 1); \
 	done
 
 build-backend: ## Build the backend Docker image
 	@echo "Building backend images"
 	@for ver in $(VERSIONS); do \
-		echo "Building: $(REGISTRY)/python-guestbook-backend:$$ver"; \
-		docker build -t $(REGISTRY)/python-guestbook-backend:$$ver ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1); \
+		echo "Building: $(LOCAL_REGISTRY)/python-guestbook-backend:$$ver"; \
+		docker build -t $(LOCAL_REGISTRY)/python-guestbook-backend:$$ver ./$(BACKEND_DIR) || (echo "Backend build failed" && exit 1); \
 	done
 
 push: push-frontend push-backend  ## Push all Docker images
 
 push-frontend: ## Push the frontend Docker image
 	@for ver in $(VERSIONS); do \
-		docker push $(REGISTRY)/python-guestbook-frontend:$$ver; \
+		echo "Pushing to $(LOCAL_REGISTRY)/python-guestbook-frontend:$$ver"; \
+		docker push $(LOCAL_REGISTRY)/python-guestbook-frontend:$$ver || exit 1; \
 	done
 
 push-backend: ## Push the backend Docker image
 	@for ver in $(VERSIONS); do \
-		docker push $(REGISTRY)/python-guestbook-backend:$$ver; \
+		echo "Pushing to $(LOCAL_REGISTRY)/python-guestbook-backend:$$ver"; \
+		docker push $(LOCAL_REGISTRY)/python-guestbook-backend:$$ver || exit 1; \
 	done
 
 # Checking for required tools
@@ -115,13 +115,11 @@ create-mongodb-secrets: create-namespaces deploy-mongo
 
 deploy-backend: create-namespaces create-mongodb-secrets deploy-mongo
 	helm upgrade --install $(BACKEND_RELEASE) ./$(BACKEND_CHART) \
-	--set image.tag=$(VERSION) \
 	-f $(BACKEND_CHART)/values.yaml -n $(BACKEND_NAMESPACE) --create-namespace \
 	--wait --timeout $(HELM_TIMEOUT)
 
 deploy-frontend: create-namespaces deploy-backend deploy-mongodb-exporter
 	helm upgrade --install $(FRONTEND_RELEASE) ./${FRONTEND_CHART} \
-	--set image.tag=$(VERSION) \
 	-f $(FRONTEND_CHART)/values.yaml -n $(FRONTEND_NAMESPACE) \
 	--wait --timeout $(HELM_TIMEOUT)
 
@@ -184,14 +182,14 @@ help:  ## Display available commands with descriptions
 	@echo "  make delete-all            # Clean up all resources and delete Kind cluster"
 	@echo ""
 	@echo "Configuration:"
-	@echo "  REGISTRY = $(REGISTRY)"
+	@echo "  LOCAL_REGISTRY = $(LOCAL_REGISTRY)"
 	@echo "  VERSION = $(VERSION)"
 
 verify-variables:  ## Verify required variables are set
-	@test -n "$(REGISTRY)" || (echo "REGISTRY is not set" && exit 1)
+	@test -n "$(LOCAL_REGISTRY)" || (echo "LOCAL_REGISTRY is not set" && exit 1)
 	@test -n "$(VERSION)" || (echo "VERSION is not set, using 'latest'" && VERSION=latest)
 	@echo "Building with VERSION=$(VERSION)"
-	@echo "Using REGISTRY=$(REGISTRY)"
+	@echo "Using LOCAL_REGISTRY=$(LOCAL_REGISTRY)"
 
 setup-local-cluster: ## Setup local Kind cluster with registry and ingress
 	@echo "Setting up local Kind cluster..."
@@ -215,6 +213,7 @@ delete-all: delete  ## Delete Kind cluster
 	@kind delete cluster || echo "No Kind cluster found or error deleting cluster"
 
 verify-registry:  ## Verify registry is accessible
-	@echo "Verifying registry $(REGISTRY) is accessible..."
+	@echo "Verifying registry accessibility..."
 	@docker ps > /dev/null 2>&1 || (echo "Docker is not running" && exit 1)
-	@curl -s $(REGISTRY)/v2/_catalog > /dev/null || (echo "Registry $(REGISTRY) is not accessible" && exit 1)
+	@curl -s http://$(LOCAL_REGISTRY)/v2/_catalog > /dev/null || (echo "Registry is not accessible" && exit 1)
+	@echo "Registry verified successfully"
