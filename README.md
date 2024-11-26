@@ -141,6 +141,8 @@ Each component can be configured via their respective `values.yaml` files. See i
 
 ## Testing Scaling and Alerts
 
+The examples below are for guestbook-frontend. Please adjust the name of the service and namespace accordingly if needed.
+
 ### Scale Down Test
 
 1. Scale down the frontend deployment:
@@ -155,17 +157,18 @@ kubectl get hpa guestbook-frontend -n guestbook-frontend
 
 3. Monitor pod status:
 ```bash
-kubectl get pods -n guestbook-frontend -l app=guestbook-frontend
+kubectl get pods -n guestbook-frontend -l tier=frontend
 ```
 
 ### Checking Prometheus Alerts
 
-1. Access the Prometheus UI at http://prometheus.localhost/alerts
+1. Scale down the frontend deployment:
+```bash
+kubectl scale deployment guestbook-frontend --replicas=0 -n guestbook-frontend
+```
 
 2. Look for the following alerts:
-   - `GuestbookFrontendDown`: Triggers when frontend pods are not available
-   - `GuestbookBackendDown`: Triggers when backend pods are not available
-   - `GuestbookHighLatency`: Triggers when request latency exceeds threshold
+   - `GuestbookFrontendNoPods`: Triggers when frontend pods are not available
 
 3. To resolve the alerts, scale the deployment back up:
 ```bash
