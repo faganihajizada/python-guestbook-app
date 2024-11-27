@@ -1,0 +1,75 @@
+# Config for Grafana
+grafana:
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    # Set the host to the domain name of the Grafana instance based on ingress controller in local kind cluster
+    hosts: 
+      - "grafana.localhost"
+    paths: ["/"]
+    pathType: Prefix
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "true"
+      searchNamespace: "monitoring"
+      folderAnnotation: grafana_folder  # Optional: annotation to specify dashboard folder
+      provider:
+        foldersFromFilesStructure: true
+
+# Config for Alertmanager
+alertmanager:
+  enabled: true
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    # Set the host to the domain name of the Grafana instance based on ingress controller in local kind cluster
+    hosts: 
+      - "alertmanager.localhost"
+    paths: ["/"]
+    pathType: Prefix
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: 'pagerduty'
+      routes:
+      - matchers:
+          - severity = "critical"
+          - namespace = "{{ .Release.Namespace }}"
+      - matchers:
+          - severity = "warning"
+          - namespace = "{{ .Release.Namespace }}"
+    inhibit_rules:
+    - source_matchers:
+        - severity = "critical"
+      target_matchers:
+        - severity = "warning"
+      equal: ['alertname', 'namespace']
+    receivers:
+    - name: 'pagerduty'
+      pagerduty_configs:
+      - routing_key: <YOUR_INTEGRATION_KEY>
+        severity: '{{ if eq .GroupLabels.severity "critical" }}critical{{ else }}warning{{ end }}'
+        description: '{{ template "pagerduty.default.description" . }}'
+        client: 'Alertmanager'
+        client_url: '{{ template "pagerduty.default.clientURL" . }}'
+
+# Config for Prometheus
+prometheus:
+  enabled: true
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    # Set the host to the domain name of the Grafana instance based on ingress controller in local kind cluster
+    hosts: 
+      - "prometheus.localhost"
+    paths: ["/"]
+    pathType: Prefix

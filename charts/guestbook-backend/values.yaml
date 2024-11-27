@@ -1,0 +1,210 @@
+# Default values for guestbook-backend.
+# This is a YAML-formatted file.
+
+# -- String to partially override frontend.fullname
+nameOverride: ""
+# -- String to fully override frontend.fullname
+fullnameOverride: ""
+
+image:
+  # The repository to pull the image from 
+  # Set as local registry created by /start-local.sh script
+  repository: localhost:5000/python-guestbook-backend
+  tag: "latest"
+  pullPolicy: Always
+
+# ServiceAccount configuration
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: false
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Configure the guestbook-backend kubernetes service
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+# Configure the kubernetes deployment
+deployment:
+  name: backend
+  containerPort: 8080
+  annotations: {}
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  labels: 
+    tier: backend
+  podAnnotations: {}
+  terminationGracePeriodSeconds: 30
+
+# Configure resource requests and limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Connection details for the MongoDB database
+# A a secret should be present in cluster with the name specified in "secretName" with the following keys:
+## - USERDB_PASSWORD: the password for the guestbook-user for MongoDB
+mongodb:
+  host: guestbook-mongodb.mongodb.svc.cluster.local
+  port: 27017
+  # Database name should be "guestbook" due to the limitation from src/backend/back.py line 11
+  # It is configurable for the helm chart in case the application requires a different database name
+  database: guestbook
+  auth:
+    username: guestbook-user
+    secretKeys:
+      userPasswordKey: USERDB_PASSWORD
+      secretName: guestbook-mongodb-userdb
+  initContainer:
+    image: docker.io/mongo
+    tag: latest
+    pullPolicy: IfNotPresent
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 999
+
+# Probes configuration
+probes:
+  liveness:
+    path: /messages
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 5
+    successThreshold: 1
+  readiness:
+    path: /messages
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 5
+    successThreshold: 1
+
+# Pod Disruption Budget
+# Can be used to prevent the guestbook-backend pod from being evicted
+pdb:
+  enabled: false
+  minAvailable: 1
+
+# Autoscaling configuration
+# Can be used to automatically scale the guestbook-backend pod
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Pod security context
+# Can be used to set the security context for the guestbook-backend pod
+podSecurityContext:
+  fsGroup: 1000
+
+# Security context
+# Can be used to set the security context for the guestbook-backend container
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Node selector
+# Can be used to select the node on which the guestbook-backend pod will be scheduled
+nodeSelector: {}
+
+# Affinity
+# Can be used to control the scheduling of the guestbook-backend pod
+affinity: {}
+
+# Tolerations
+# Can be used to tolerate the taints on the nodes on which the guestbook-backend pod will be scheduled
+tolerations: {}
+
+# The namespace which kube-prometheus-stack is monitoring for resources like Prometheus, Grafana, etc.
+monitoring:
+  namespace: monitoring
+  # Config for Prometheus Operator
+  prometheusOperator:
+    instance: kube-prometheus-stack
+    name: kube-prometheus-stack
+    release: kube-prometheus-stack
+  prometheusRules:
+    enabled: true
+  grafanaDashboards:
+    enabled: true
+  metrics:
+    enabled: true
+    port: 8080
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+  alerting:
+    # Pod Health
+    podsNotReadyDuration: "5m"
+    podsNotReadySeverity: "critical"
+    
+    # Pod Restarts
+    restartThreshold: 2
+    restartDuration: "5m"
+    restartSeverity: "warning"
+    
+    # Resource Usage - CPU
+    cpuThreshold: 0.85
+    cpuDuration: "15m"
+    cpuSeverity: "warning"
+    
+    # Resource Usage - Memory
+    memoryThreshold: 0.85
+    memoryDuration: "15m"
+    memorySeverity: "warning"
+    
+    # OOM Kills
+    oomDuration: "1m"
+    oomSeverity: "critical"
+    
+    # Pod Pending
+    pendingDuration: "5m"
+    pendingSeverity: "warning"
+    
+    # Container Waiting
+    containerWaitingDuration: "5m"
+    containerWaitingSeverity: "warning"
+    
+    # Network Errors
+    networkErrorThreshold: 0.1
+    networkErrorDuration: "15m"
+    networkErrorSeverity: "warning"
+    
+    # No Pods Running
+    noPodsRunningDuration: "1m"
+    noPodsRunningSeverity: "critical"
+    
+    # HTTP Metrics - Latency
+    latencyThreshold: 2
+    latencyDuration: "10m"
+    latencySeverity: "warning"
+    
+    # HTTP Metrics - Error Rate
+    errorRateThreshold: 0.05
+    errorRateDuration: "5m"
+    errorRateSeverity: "critical"
+    
+    # HTTP Metrics - Request Rate
+    requestRateThreshold: 100
+    requestRateDuration: "5m"
+    requestRateSeverity: "warning" 

@@ -1,4 +1,5 @@
-Flask==2.0.2
+Flask==2.3.3
 Flask-PyMongo==2.3.0
-bleach==4.1.0
-ptvsd==4.3.2 # Required for debugging.
+bleach==5.0.1
+debugpy
+prometheus-flask-exporter==0.23.1

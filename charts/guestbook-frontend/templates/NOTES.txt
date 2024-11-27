@@ -1,0 +1,37 @@
+Application Details:
+------------------
+Frontend Service: {{ include "guestbook-frontend.fullname" . }}
+Port: {{ .Values.service.port }}
+Backend URL: {{ .Values.backendUrl }}
+
+Access:
+-------
+The frontend service is accessible internally at:
+{{ include "guestbook-frontend.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+{{- if .Values.ingress.enabled }}
+The application can be accessed externally at:
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- end }}
+
+Quick Commands:
+-------------
+Pods:     kubectl get pods -l "app.kubernetes.io/name={{ include "guestbook-frontend.name" . }}" -n {{ .Release.Namespace }}
+Logs:     kubectl logs -f -l "app.kubernetes.io/name={{ include "guestbook-frontend.name" . }}" -n {{ .Release.Namespace }}
+Details:  kubectl describe deployment {{ include "guestbook-frontend.fullname" . }} -n {{ .Release.Namespace }}
+
+{{- if .Values.autoscaling.enabled }}
+Autoscaling:
+-----------
+Min replicas: {{ .Values.autoscaling.minReplicas }}
+Max replicas: {{ .Values.autoscaling.maxReplicas }}
+Target CPU utilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}%
+{{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+Target Memory utilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}%
+{{- end }}
+{{- end }}
+
+For more information about the deployment, check the values.yaml file or run:
+helm get values {{ .Release.Name }} -n {{ .Release.Namespace }}

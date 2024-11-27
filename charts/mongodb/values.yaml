@@ -1,0 +1,110 @@
+# Configuration for MongoDB
+# This configuration is for local development
+# based on https://github.com/groundhog2k/helm-charts/tree/master/charts/mongodb
+
+## MongoDB docker image
+image:
+  registry: "docker.io"
+  repository: "mongo"
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+## Pod security options
+podSecurityContext:
+  fsGroup: 999
+  supplementalGroups:
+    - 999
+
+## Default security options to run MongoDB as non-root, read only container without privilege escalation
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsGroup: 999
+  runAsUser: 999
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  # Suffix of the headless service name
+  headlessServiceSuffix: internal
+  type: ClusterIP
+  port: 27017
+  labels: {}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9216"
+    prometheus.io/path: "/metrics"
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+    - name: metrics
+      port: 9216
+      targetPort: 9216
+
+## Resource limits and requests
+resources:
+  limits:
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+## startup check
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+  successThreshold: 1
+  periodSeconds: 10
+
+## Liveness probe
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+  periodSeconds: 10
+
+## Readiness probe
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+  periodSeconds: 10
+
+# Database settings
+settings:
+  ## The root username
+  rootUsername: root
+  ## The root user password
+  rootPassword: password
+
+## Optional user database which is created during first startup with user and password
+## Use external secret for production
+## Database name should be "guestbook" due to the limitation from src/backend/back.py line 11
+userDatabase:
+  ## Name of the user database
+  name: guestbook
+  ## Database user with full access rights
+  user: guestbook-user
+  ## Password of the database user
+  password: password
+
+# Storage parameters
+storage:
+  ## Internal volume name and prefix of a created PVC
+  volumeName: "mongodb-volume"
+  requestedSize: 20Gi
+  ## the storage class name from kind cluster
+  className: "standard"
+  accessModes:
+    - ReadWriteOnce

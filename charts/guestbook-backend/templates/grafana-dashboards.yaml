@@ -1,0 +1,12 @@
+{{- if .Values.monitoring.grafanaDashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guestbook-backend-dashboard
+  namespace: {{ .Values.monitoring.namespace }}
+  # labels for Grafana to find the dashboard
+  labels:
+    grafana_dashboard: "true"
+data:
+  backend-dashboard.json: {{ .Files.Get "dashboards/guestbook-backend.json" | quote }}
+{{- end }}

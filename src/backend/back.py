@@ -6,8 +6,14 @@ import time
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 import bleach
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
+
+# Add basic app info
+metrics.info('app_info', 'Application info', version='1.0.0')
+
 app.config["MONGO_URI"] = 'mongodb://{}/guestbook'.format(os.environ.get('GUESTBOOK_DB_ADDR'))
 mongo = PyMongo(app)
 
@@ -26,7 +32,7 @@ def add_message():
                 'message':bleach.clean(raw_data['message']),
                 'date':time.time()}
     mongo.db.messages.insert_one(msg_data)
-    return  jsonify({}), 201
+    return jsonify({}), 201
 
 if __name__ == '__main__':
     for v in ['PORT', 'GUESTBOOK_DB_ADDR']:

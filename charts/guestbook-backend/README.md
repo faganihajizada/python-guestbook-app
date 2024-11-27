@@ -1,0 +1,103 @@
+# Guestbook Backend
+
+A Helm chart for Guestbook Backend Service
+
+## Introduction
+
+This chart bootstraps `guestbook-backend` deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+
+## Requirements
+
+Before deploying this chart, please ensure:
+
+1. Kubernetes secret exists in the target namespace with:
+   - Name: `your-secret-name` (configurable via `mongodb.auth.secretKeys.secretName`)
+   - Required keys:
+     ```yaml
+     USERDB_PASSWORD: "<your-mongodb-password>"
+     ```
+
+2. MongoDB is installed and accessible at the configured host (default: `guestbook-mongodb.mongodb.svc.cluster.local`)
+
+## Deploy
+
+```console
+helm install guestbook-frontend ./charts/guestbook-frontend -f values.yaml --create-namespace -n [NAMESPACE]
+```
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| autoscaling.enabled | bool | `false` |  |
+| autoscaling.maxReplicas | int | `5` |  |
+| autoscaling.minReplicas | int | `2` |  |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| autoscaling.targetMemoryUtilizationPercentage | int | `80` |  |
+| deployment.annotations | object | `{}` |  |
+| deployment.containerPort | int | `8080` |  |
+| deployment.labels.tier | string | `"backend"` |  |
+| deployment.name | string | `"backend"` |  |
+| deployment.podAnnotations | object | `{}` |  |
+| deployment.replicas | int | `1` |  |
+| deployment.strategy.rollingUpdate.maxSurge | int | `1` |  |
+| deployment.strategy.rollingUpdate.maxUnavailable | int | `1` |  |
+| deployment.strategy.type | string | `"RollingUpdate"` |  |
+| deployment.terminationGracePeriodSeconds | int | `30` |  |
+| fullnameOverride | string | `""` | String to fully override frontend.fullname |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.repository | string | `"localhost:5000/python-guestbook-backend"` |  |
+| image.tag | string | `"latest"` |  |
+| mongodb.auth.secretKeys.secretName | string | `"guestbook-mongodb-userdb"` |  |
+| mongodb.auth.secretKeys.userPasswordKey | string | `"USERDB_PASSWORD"` |  |
+| mongodb.auth.username | string | `"guestbook-user"` |  |
+| mongodb.database | string | `"guestbook"` |  |
+| mongodb.host | string | `"guestbook-mongodb.mongodb.svc.cluster.local"` |  |
+| mongodb.initContainer.image | string | `"docker.io/mongo"` |  |
+| mongodb.initContainer.pullPolicy | string | `"IfNotPresent"` |  |
+| mongodb.initContainer.securityContext.runAsNonRoot | bool | `true` |  |
+| mongodb.initContainer.securityContext.runAsUser | int | `999` |  |
+| mongodb.initContainer.tag | string | `"latest"` |  |
+| mongodb.port | int | `27017` |  |
+| monitoring.grafanaDashboards.enabled | bool | `true` |  |
+| monitoring.namespace | string | `"monitoring"` |  |
+| monitoring.prometheusOperator.instance | string | `"kube-prometheus-stack"` |  |
+| monitoring.prometheusOperator.name | string | `"kube-prometheus-stack"` |  |
+| monitoring.prometheusOperator.release | string | `"kube-prometheus-stack"` |  |
+| monitoring.prometheusRules.enabled | bool | `true` |  |
+| nameOverride | string | `""` | String to partially override frontend.fullname |
+| nodeSelector | object | `{}` |  |
+| pdb.enabled | bool | `false` |  |
+| pdb.minAvailable | int | `1` |  |
+| podSecurityContext.fsGroup | int | `1000` |  |
+| probes.liveness.failureThreshold | int | `5` |  |
+| probes.liveness.initialDelaySeconds | int | `30` |  |
+| probes.liveness.path | string | `"/messages"` |  |
+| probes.liveness.periodSeconds | int | `10` |  |
+| probes.liveness.successThreshold | int | `1` |  |
+| probes.liveness.timeoutSeconds | int | `3` |  |
+| probes.readiness.failureThreshold | int | `5` |  |
+| probes.readiness.initialDelaySeconds | int | `15` |  |
+| probes.readiness.path | string | `"/messages"` |  |
+| probes.readiness.periodSeconds | int | `5` |  |
+| probes.readiness.successThreshold | int | `1` |  |
+| probes.readiness.timeoutSeconds | int | `3` |  |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"512Mi"` |  |
+| resources.requests.cpu | string | `"100m"` |  |
+| resources.requests.memory | string | `"128Mi"` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| securityContext.runAsNonRoot | bool | `true` |  |
+| securityContext.runAsUser | int | `1000` |  |
+| service.annotations | object | `{}` |  |
+| service.port | int | `8080` |  |
+| service.type | string | `"ClusterIP"` |  |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.create | bool | `false` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| tolerations | object | `{}` |  |
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
