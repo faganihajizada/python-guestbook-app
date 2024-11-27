@@ -41,7 +41,7 @@ deployment:
       maxSurge: 1
       maxUnavailable: 1
   labels: 
-    tier: guestbook-backend
+    tier: backend
   podAnnotations: {}
   terminationGracePeriodSeconds: 30
 
